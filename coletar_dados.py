@@ -444,7 +444,21 @@ def rodar(nome, func, *args):
         return bloco_erro(e)
 
 
+def limpar_segredos():
+    """Aceita token colado com o nome na frente (NOME=valor), aspas, espaços ou quebra de linha."""
+    for nome in ("META_ACCESS_TOKEN", "HUBSPOT_TOKEN", "GADS_DEVELOPER_TOKEN", "GADS_CLIENT_ID",
+                 "GADS_CLIENT_SECRET", "GADS_REFRESH_TOKEN", "GADS_CUSTOMER_ID", "GADS_LOGIN_CUSTOMER_ID"):
+        v = os.environ.get(nome)
+        if not v:
+            continue
+        v = v.strip().strip('"').strip("'").strip()
+        if v.startswith(nome + "="):
+            v = v[len(nome) + 1:].strip().strip('"').strip("'").strip()
+        os.environ[nome] = v
+
+
 def main():
+    limpar_segredos()
     ap = argparse.ArgumentParser()
     ap.add_argument("--saida", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "dados.json"))
     args = ap.parse_args()
