@@ -50,10 +50,10 @@ jobs:
 
       - name: Enviar dados.json para o site
         env:
-          DASH_UPLOAD_URL: ${{ secrets.DASH_UPLOAD_URL }}     # ex.: sftp://servidor/caminho/painel-mkt/dados.json
+          DASH_UPLOAD_URL: ${{ secrets.DASH_UPLOAD_URL }}     # ex.: ftp://br.jyn5040.com.br/dados.json (FTPS)
           DASH_UPLOAD_USER: ${{ secrets.DASH_UPLOAD_USER }}
           DASH_UPLOAD_PASS: ${{ secrets.DASH_UPLOAD_PASS }}
         run: |
-          curl -sS --fail --ftp-create-dirs \
+          curl -sS --fail --ftp-create-dirs --ssl-reqd \
             --user "$DASH_UPLOAD_USER:$DASH_UPLOAD_PASS" \
             -T dados.json "$DASH_UPLOAD_URL"

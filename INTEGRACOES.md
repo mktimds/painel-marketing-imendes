@@ -104,8 +104,10 @@ O número comercial não está conectado ao HubSpot (decisão de 07/11/2026), en
 2. Proteja com senha: copie `hospedagem/.htaccess` para dentro dela e ajuste o caminho do `.htpasswd` (ou use "Privacidade de diretórios" do cPanel, que faz os dois).
 3. Suba `index.html` e `logo-imendes-branca.png` para a pasta.
 4. No GitHub, crie o repositório com o conteúdo desta pasta e cadastre os segredos:
-   - `DASH_UPLOAD_URL`: endereço completo do arquivo de destino, por exemplo `sftp://SERVIDOR/home/USUARIO/public_html/painel-mkt/dados.json` (ou `ftp://…`).
-   - `DASH_UPLOAD_USER`, `DASH_UPLOAD_PASS`: usuário e senha de FTP/SFTP. Prefira um usuário de FTP restrito a essa pasta.
+   - Crie no cPanel (Arquivos → Contas FTP) um usuário restrito à pasta `public_html/painel-mkt`.
+   - `DASH_UPLOAD_URL`: `ftp://br.jyn5040.com.br/dados.json` (com o usuário restrito, a raiz do FTP já é a pasta do painel). O envio usa FTP criptografado (TLS) obrigatório; o certificado do servidor vale para `br.jyn5040.com.br`, não para `grupoimendes.com.br`.
+   - `DASH_UPLOAD_USER`: o usuário completo da conta FTP, como o cPanel mostra (ex.: `painel@grupoimendes.com.br`).
+   - `DASH_UPLOAD_PASS`: a senha dessa conta FTP.
    - Opcionais, para manter o último dado bom quando um canal falhar: `DASH_JSON_URL` (`https://grupoimendes.com.br/painel-mkt/dados.json`), `DASH_SITE_USER`, `DASH_SITE_PASS` (o usuário e a senha da pasta).
 5. Em Actions, rode "Atualizar painel de marketing" uma vez pelo botão **Run workflow** e abra `https://grupoimendes.com.br/painel-mkt/`.
 
