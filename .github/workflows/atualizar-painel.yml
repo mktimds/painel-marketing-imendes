@@ -54,6 +54,9 @@ jobs:
           DASH_UPLOAD_USER: ${{ secrets.DASH_UPLOAD_USER }}
           DASH_UPLOAD_PASS: ${{ secrets.DASH_UPLOAD_PASS }}
         run: |
-          curl -sS --fail --ftp-create-dirs --ssl-reqd \
-            --user "$DASH_UPLOAD_USER:$DASH_UPLOAD_PASS" \
-            -T dados.json "$DASH_UPLOAD_URL"
+          limpa() { v=$(printf '%s' "$2" | tr -d '\r\n' | sed -e "s/^ *//; s/ *$//; s/^$1=//; s/^[\"']//; s/[\"']$//"); printf '%s' "$v"; }
+          URL=$(limpa DASH_UPLOAD_URL "$DASH_UPLOAD_URL")
+          USR=$(limpa DASH_UPLOAD_USER "$DASH_UPLOAD_USER")
+          PAS=$(limpa DASH_UPLOAD_PASS "$DASH_UPLOAD_PASS")
+          echo "Destino: $URL · usuário com ${#USR} caracteres · senha com ${#PAS} caracteres"
+          curl -sS --fail --ftp-create-dirs --ssl-reqd --user "$USR:$PAS" -T dados.json "$URL"
