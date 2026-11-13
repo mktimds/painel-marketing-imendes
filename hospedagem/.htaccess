@@ -1,0 +1,17 @@
+# Proteção por senha da pasta do painel (Apache/LiteSpeed).
+# 1) Crie o arquivo de senhas pelo painel da hospedagem (cPanel → "Privacidade de diretórios")
+#    ou com:  htpasswd -c /CAMINHO/FORA/DO/PUBLIC_HTML/.htpasswd-painel usuario
+# 2) Troque o caminho abaixo pelo caminho ABSOLUTO desse arquivo no servidor.
+AuthType Basic
+AuthName "Painel de Marketing IMendes"
+AuthUserFile /CAMINHO/FORA/DO/PUBLIC_HTML/.htpasswd-painel
+Require valid-user
+
+# não deixa navegador nem proxy guardar o JSON antigo
+<FilesMatch "dados\.json$">
+  Header set Cache-Control "no-store, max-age=0"
+</FilesMatch>
+
+# fora do Google
+Header set X-Robots-Tag "noindex, nofollow"
+Options -Indexes

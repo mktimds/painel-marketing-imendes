@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Painel de Marketing IMendes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0b0d1c; --card:rgba(31,42,73,.55);
+  --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.14);
+  --fg:#ffffff; --muted:#c2c7d0; --subtle:#8a93a6;
+  --yellow:#eabd32; --yellow-soft:#f5cf57;
+  --green:#39a770; --orange:#c87a31; --red:#d04c52;
+  --meta:#4f86d6; --google:#eabd32; --linkedin:#7aa7e0; --hub:#e98a5b; --wpp:#39a770;
+  --r:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{
+  font-family:Inter,Arial,system-ui,sans-serif;color:var(--fg);background:var(--bg);
+  background-image:radial-gradient(1200px 700px at 85% -10%,rgba(30,74,134,.45),transparent 60%),
+                   radial-gradient(900px 600px at -10% 110%,rgba(234,189,50,.08),transparent 60%);
+  background-attachment:fixed;font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.num{font-family:Poppins,Arial,sans-serif}
+button,input{font-family:inherit}
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+
+/* --- menu lateral --- */
+aside{position:sticky;top:0;height:100vh;padding:24px 16px;border-right:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(19,22,44,.92),rgba(11,13,28,.92));display:flex;flex-direction:column;gap:6px;z-index:6}
+.logo{display:block;width:150px;margin:4px 8px 28px}
+.nav a{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;color:var(--muted);
+  text-decoration:none;font-weight:500;transition:background .2s,color .2s,transform .2s}
+.nav a:hover{background:rgba(255,255,255,.05);color:#fff;transform:translateX(2px)}
+.nav a.ativo{background:linear-gradient(90deg,rgba(234,189,50,.18),rgba(234,189,50,.04));color:#fff;box-shadow:inset 3px 0 0 var(--yellow)}
+.nav svg{width:20px;height:20px;flex:none}
+.nav .dot{width:7px;height:7px;border-radius:50%;margin-left:auto;background:var(--subtle)}
+.nav .dot.ok{background:var(--green)} .nav .dot.snap{background:var(--orange)} .nav .dot.err{background:var(--red)}
+.sidefoot{margin-top:auto;font-size:12px;color:var(--subtle);padding:0 8px}
+.sidefoot b{color:var(--muted);font-weight:600}
+
+/* --- topo --- */
+main{padding:22px 28px 40px;min-width:0}
+.topo{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.topo h1{font-size:22px;font-weight:600;letter-spacing:-.01em}
+.topo .periodo{color:var(--muted);font-size:13px}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;border:1px solid var(--line2);
+  background:rgba(255,255,255,.03);font-size:12px;color:var(--muted)}
+.chip .pulse{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(57,167,112,.6)}70%{box-shadow:0 0 0 8px rgba(57,167,112,0)}100%{box-shadow:0 0 0 0 rgba(57,167,112,0)}}
+.topo .dir{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center;position:relative}
+.btn{cursor:pointer;border:1px solid var(--line2);background:rgba(255,255,255,.04);color:#fff;border-radius:999px;padding:8px 14px;font:500 12px Inter;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{border-color:var(--yellow)}
+.btn.prim{background:var(--yellow);color:#13162c;border-color:var(--yellow);font-weight:600}
+.btn svg{width:16px;height:16px}
+
+/* --- seletor de período --- */
+.pop{position:absolute;right:0;top:calc(100% + 8px);width:340px;max-width:calc(100vw - 32px);background:#141a33;border:1px solid var(--line2);
+  border-radius:16px;padding:16px;box-shadow:0 24px 60px rgba(0,0,0,.5);z-index:20;display:none}
+.pop.aberto{display:block;animation:entra .25s forwards}
+.pop h2{font:600 11px Inter;color:var(--subtle);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.presets button{cursor:pointer;border:1px solid var(--line2);background:transparent;color:var(--muted);border-radius:999px;padding:6px 11px;font:500 12px Inter}
+.presets button:hover,.presets button.sel{border-color:var(--yellow);color:#fff;background:rgba(234,189,50,.12)}
+.datas{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.datas label{font-size:11px;color:var(--subtle);display:flex;flex-direction:column;gap:5px}
+.datas input{background:#0b0d1c;border:1px solid var(--line2);color:#fff;border-radius:10px;padding:8px 10px;font-size:13px;color-scheme:dark}
+.datas input:focus{outline:2px solid rgba(234,189,50,.5);border-color:transparent}
+.pop .rodape{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pop .rodape small{color:var(--subtle);font-size:11px}
+.pop .erro{color:#f1b9bc;font-size:12px;margin:-6px 0 10px;display:none}
+
+/* --- grade e cartões --- */
+.grid{display:grid;gap:16px}
+.g5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g21{grid-template-columns:2fr 1fr}
+.g12{grid-template-columns:1fr 2fr}
+.card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);overflow:hidden;min-width:0;
+  opacity:0;transform:translateY(14px);animation:entra .6s cubic-bezier(.2,.7,.2,1) forwards}
+@keyframes entra{to{opacity:1;transform:none}}
+.card::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent)}
+.card h2{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card h2 .tag{margin-left:auto;text-transform:none;letter-spacing:0;font:500 11px Inter;color:var(--subtle)}
+.kpi .rot{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;display:flex;align-items:center;gap:8px}
+.kpi .rot i{width:8px;height:8px;border-radius:2px;display:inline-block}
+.kpi .num{font-size:28px;font-weight:600;margin:6px 0 2px;letter-spacing:-.01em;white-space:nowrap}
+.kpi .sub{font-size:12px;color:var(--subtle)}
+.delta{font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:3px}
+.delta.up{color:var(--green)} .delta.down{color:var(--red)} .delta.neu{color:var(--subtle)}
+.kpi.destaque{background:linear-gradient(135deg,rgba(234,189,50,.22),rgba(30,74,134,.35));border-color:rgba(234,189,50,.35)}
+.aviso{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;font-size:13px;
+  background:rgba(200,122,49,.12);border:1px solid rgba(200,122,49,.35);color:#f4cfa5}
+.aviso.info{background:rgba(79,134,214,.1);border-color:rgba(79,134,214,.3);color:#c9dbf5}
+.aviso svg{flex:none;width:18px;height:18px;margin-top:1px}
+.secao > * + *{margin-top:16px}
+.chart-box{position:relative;height:260px}
+.chart-box.baixo{height:210px}
+
+/* --- funil no estilo trapézio --- */
+.funil-card{padding:22px 20px 20px}
+.funil{display:flex;flex-direction:column;align-items:center;gap:6px}
+.funil .eta{--w:100%;width:0;min-height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  padding:12px 9% 14px;clip-path:polygon(0 0,100% 0,95% 100%,5% 100%);transition:width 1.1s cubic-bezier(.2,.7,.2,1);
+  position:relative;overflow:hidden}
+.funil .eta::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.10) 50%,transparent 70%);
+  transform:translateX(-100%);animation:brilho 5s ease-in-out infinite}
+@keyframes brilho{0%,70%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.funil .eta.vis{width:var(--w)}
+.funil .tit{font-size:13px;color:rgba(255,255,255,.88);margin-bottom:4px}
+.funil .linha{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.funil .val{font:600 26px Poppins;letter-spacing:-.01em;line-height:1.15}
+.funil .val small{font:600 22px Poppins}
+.funil .pill{font:600 12px Inter;padding:4px 11px;border-radius:999px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);white-space:nowrap}
+.funil .det{font-size:12px;color:rgba(255,255,255,.75);margin-top:4px}
+.funil .pend{opacity:.55}
+.e0{background:linear-gradient(180deg,#123a63,#0d2c4d)}
+.e1{background:linear-gradient(180deg,#0b5e40,#08482f)}
+.e2{background:linear-gradient(180deg,#7a5418,#5f4012)}
+.e3{background:linear-gradient(180deg,#0b5a5e,#084649)}
+.e4{background:linear-gradient(180deg,#4f2353,#3d1a41)}
+.e5{background:linear-gradient(180deg,#2c2878,#221f5f)}
+.e6{background:linear-gradient(180deg,#8a6d12,#6b540d)}
+.funil-nota{font-size:12px;color:var(--subtle);text-align:center;margin-top:12px}
+
+/* --- tabelas --- */
+.tabela{width:100%;border-collapse:collapse;font-size:13px}
+.tabela th{font:600 11px Inter;color:var(--subtle);text-transform:uppercase;letter-spacing:.05em;text-align:right;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tabela th:first-child,.tabela td:first-child{text-align:left}
+.tabela td{padding:10px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums;color:#e8ebf1;white-space:nowrap}
+.tabela tr{opacity:0;animation:entra .5s forwards}
+.tabela tr:hover td{background:rgba(255,255,255,.025)}
+.tabela .nome{max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+.rolagem{overflow-x:auto;scrollbar-color:rgba(255,255,255,.18) transparent;scrollbar-width:thin}
+.rolagem::-webkit-scrollbar{height:6px}.rolagem::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:9px}
+
+/* --- ranking --- */
+.rank{display:flex;flex-direction:column;gap:12px}
+.rank .lin{display:grid;grid-template-columns:24px 1fr auto;gap:10px;align-items:center}
+.rank .pos{font:600 12px Poppins;color:var(--subtle)}
+.rank .txt{min-width:0}
+.rank .txt b{display:block;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank .bar{height:6px;border-radius:99px;background:rgba(255,255,255,.06);margin-top:6px;overflow:hidden}
+.rank .bar span{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--yellow),var(--yellow-soft));transition:width 1.2s cubic-bezier(.2,.7,.2,1)}
+.rank .val{font:600 13px Poppins;text-align:right}
+.rank .val small{display:block;font:400 11px Inter;color:var(--subtle)}
+
+/* --- anúncios --- */
+.ads{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
+.ad{background:rgba(11,13,28,.55);border:1px solid var(--line);border-radius:14px;overflow:hidden;transition:transform .25s,border-color .25s;opacity:0;animation:entra .6s forwards}
+.ad:hover{transform:translateY(-4px);border-color:rgba(234,189,50,.45)}
+.ad .img{aspect-ratio:1/1;background:#0f1328 center/cover no-repeat;position:relative}
+.ad .img .pos{position:absolute;top:10px;left:10px;background:var(--yellow);color:#13162c;font:700 12px Poppins;border-radius:8px;padding:3px 8px}
+.ad .img .tipo{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.55);font:500 11px Inter;border-radius:8px;padding:3px 8px}
+.ad .info{padding:12px 14px}
+.ad .info b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ad .info small{display:block;color:var(--subtle);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:10px}
+.ad .mets{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ad .mets div{font-size:11px;color:var(--subtle)} .ad .mets div b{display:block;font:600 15px Poppins;color:#fff}
+
+.status{display:inline-flex;align-items:center;gap:6px;font:600 11px Inter;padding:3px 9px;border-radius:99px}
+.status.ok{background:rgba(57,167,112,.15);color:#a9d9be}
+.status.snap{background:rgba(200,122,49,.15);color:#f4cfa5}
+.status.pend{background:rgba(255,255,255,.06);color:var(--muted)}
+.status.erro{background:rgba(208,76,82,.15);color:#f1b9bc}
+.ult{display:flex;flex-direction:column}
+.ult .it{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);opacity:0;animation:entra .5s forwards}
+.ult .it:last-child{border:0}
+.ult .av{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(234,189,50,.14);color:var(--yellow);font:600 13px Poppins;flex:none}
+.ult .t{min-width:0;flex:1}
+.ult .t b{display:block;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}
+.ult .t small{color:var(--subtle);font-size:12px}
+.vazio{color:var(--subtle);font-size:13px;padding:8px 0}
+.carregando{display:grid;place-items:center;height:60vh;color:var(--muted)}
+.progresso{position:fixed;top:0;left:0;height:2px;background:var(--yellow);width:0;z-index:30;transition:width 1s linear}
+
+@media (max-width:1200px){.g5{grid-template-columns:repeat(3,minmax(0,1fr))}.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  aside{position:sticky;height:auto;flex-direction:row;align-items:center;overflow-x:auto;padding:10px 12px;gap:4px;border-right:0;border-bottom:1px solid var(--line)}
+  .logo{width:96px;margin:0 8px 0 0;flex:none}
+  .nav{display:flex;gap:4px}.nav a{white-space:nowrap;padding:8px 10px}
+  .sidefoot{display:none}
+  main{padding:16px}
+  .g21,.g12,.g3,.g2{grid-template-columns:1fr}
+  .g5,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpi .num{font-size:22px}
+  .topo .dir{margin-left:0}
+  .pop{left:0;right:auto}
+  .funil .eta{padding:10px 7% 12px;clip-path:polygon(0 0,100% 0,97% 100%,3% 100%)}
+  .funil .val{font-size:21px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.card,.tabela tr,.ad,.ult .it{opacity:1;transform:none}.funil .eta{width:var(--w)}}
+</style>
+</head>
+<body>
+<div class="progresso" id="progresso"></div>
+<div class="app">
+  <aside>
+    <img class="logo" src="logo-imendes-branca.png" alt="IMendes">
+    <nav class="nav" id="nav">
+      <a href="#geral" data-s="geral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg><span>Visão Geral</span></a>
+      <a href="#google" data-s="google"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.5 12.2c0-.7-.1-1.3-.2-1.9H12v3.6h4.8a4.1 4.1 0 0 1-1.8 2.7v2.2h2.9c1.7-1.6 2.6-3.9 2.6-6.6Z"/><path d="M12 21c2.4 0 4.5-.8 5.9-2.2L15 16.6c-.8.5-1.8.9-3 .9-2.3 0-4.3-1.6-5-3.7H4v2.3A9 9 0 0 0 12 21Z"/><path d="M7 13.8a5.4 5.4 0 0 1 0-3.6V7.9H4a9 9 0 0 0 0 8.2l3-2.3Z"/><path d="M12 6.5c1.3 0 2.5.5 3.4 1.3L18 5.3A9 9 0 0 0 4 7.9l3 2.3c.7-2.1 2.7-3.7 5-3.7Z"/></svg><span>Google Ads</span><i class="dot" id="dot-google"></i></a>
+      <a href="#meta" data-s="meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 15.5c0-4 2-8 4.6-8 3.3 0 5.6 9 8.8 9 1.7 0 2.6-1.4 2.6-3.6 0-3.4-1.7-6.4-4-6.4-2.8 0-4.6 4.2-6.2 7-1.4 2.5-2.6 3.5-4 3.5C3.8 17 3 16.4 3 15.5Z"/></svg><span>Meta Ads</span><i class="dot" id="dot-meta"></i></a>
+      <a href="#linkedin" data-s="linkedin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 10v7M8 7v.01M12 17v-4a2 2 0 0 1 4 0v4M12 10v7"/></svg><span>LinkedIn Ads</span><i class="dot" id="dot-linkedin"></i></a>
+      <a href="#hubspot" data-s="hubspot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="16" cy="14" r="4"/><path d="M16 10V6M16 6a1.5 1.5 0 1 0 0-.01M12.8 11.6 5 6M5 6a1.5 1.5 0 1 0 0 .01M13 16.5l-3 2.5"/></svg><span>Marketing → Comercial</span><i class="dot" id="dot-hubspot"></i></a>
+      <a href="#whatsapp" data-s="whatsapp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19l-4 1Z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 1c-1-.5-1.5-1-2-2l1-1-1-2L9 9.5Z"/></svg><span>WhatsApp</span><i class="dot" id="dot-wpp"></i></a>
+      <a href="#fontes" data-s="fontes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 7H6a3 3 0 0 0 0 6h3M15 7h3a3 3 0 0 1 0 6h-3M8 10h8"/><path d="M12 17v4"/></svg><span>Integrações</span></a>
+    </nav>
+    <div class="sidefoot">Atualiza a cada <b>10 min</b><br>Próxima leitura em <b id="contagem">--:--</b></div>
+  </aside>
+
+  <main>
+    <div class="topo">
+      <div>
+        <h1 id="titulo">Visão Geral</h1>
+        <div class="periodo" id="periodo">Carregando…</div>
+      </div>
+      <div class="dir">
+        <span class="chip"><i class="pulse"></i><span id="atualizado">--</span></span>
+        <button class="btn" id="btn-periodo" aria-haspopup="dialog" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+          <span id="btn-periodo-txt">Período</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="pop" id="pop" role="dialog" aria-label="Escolher período">
+          <h2>Períodos prontos</h2>
+          <div class="presets" id="presets"></div>
+          <h2>Ou escolha as datas</h2>
+          <div class="datas">
+            <label>De<input type="date" id="data-de"></label>
+            <label>Até<input type="date" id="data-ate"></label>
+          </div>
+          <div class="erro" id="pop-erro"></div>
+          <div class="rodape"><small id="pop-lim"></small><button class="btn prim" id="btn-aplicar">Aplicar</button></div>
+        </div>
+      </div>
+    </div>
+    <div id="conteudo"><div class="carregando">Carregando dados…</div></div>
+  </main>
+</div>
+
+<script>
+/* ======================================================================
+   Painel de Marketing IMendes
+   Lê dados.json (gerado pelo coletar_dados.py a cada 10 min). Os dados vêm
+   por dia; o painel soma o período escolhido. Não há número fixo aqui.
+   ====================================================================== */
+const ARQUIVO = 'dados.json';
+const INTERVALO = 10 * 60 * 1000;
+let DADOS = null, proxima = Date.now() + INTERVALO, graficos = [];
+let PER = null;   // {inicio, fim, preset}
+
+const PRESETS = [
+  ['mes_atual', 'Mês atual'], ['mes_anterior', 'Mês anterior'], ['ult7', 'Últimos 7 dias'],
+  ['ult30', 'Últimos 30 dias'], ['ult90', 'Últimos 90 dias'], ['historico', 'Tudo (180 dias)'],
+];
+
+/* ---------- formatação ---------- */
+const brl = v => v == null || isNaN(v) ? '—' : v.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+const int = v => v == null || isNaN(v) ? '—' : Math.round(v).toLocaleString('pt-BR');
+const pct = (v, d=1) => v == null || isNaN(v) || !isFinite(v) ? '—' : (v*100).toLocaleString('pt-BR', {maximumFractionDigits:d}) + '%';
+const dec = (v, d=1) => v == null || isNaN(v) ? '—' : v.toLocaleString('pt-BR', {maximumFractionDigits:d});
+const div = (a, b) => (a == null || !b) ? null : a / b;
+const ok = b => b && (b.status === 'ok' || b.status === 'snapshot');
+const vivo = b => b && b.status === 'ok';
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dBR = iso => { const [a,m,d] = iso.slice(0,10).split('-'); return `${d}/${m}`; };
+const dBRa = iso => { const [a,m,d] = iso.slice(0,10).split('-'); return `${d}/${m}/${a}`; };
+const dataHora = iso => new Date(iso).toLocaleString('pt-BR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit', timeZone:'America/Sao_Paulo'});
+const addDias = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0,10); };
+const nDias = (a, b) => Math.round((new Date(b + 'T12:00:00Z') - new Date(a + 'T12:00:00Z')) / 864e5) + 1;
+const dentro = (d, p) => d && d >= p.inicio && d <= p.fim;
+function dias(p) { const o = []; for (let d = p.inicio; d <= p.fim; d = addDias(d, 1)) o.push(d); return o; }
+
+/* ---------- período ---------- */
+function faixaPreset(k) { return k === 'historico' ? DADOS.historico : DADOS.presets[k]; }
+function presetDe(p) {   // período bate com algum pronto? (o alcance do Meta só existe nesses)
+  for (const [k] of PRESETS) { const f = faixaPreset(k); if (f && f.inicio === p.inicio && f.fim === p.fim) return k; }
+  return null;
+}
+function comparacao(p) {
+  const n = nDias(p.inicio, p.fim), c = {inicio: addDias(p.inicio, -n), fim: addDias(p.inicio, -1)};
+  return c.inicio >= DADOS.historico.inicio ? c : null;
+}
+function salvarPeriodo() {
+  try { localStorage.setItem('painel-periodo', JSON.stringify(PER.preset ? {preset: PER.preset} : PER)); } catch (e) {}
+}
+function lerPeriodo() {
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem('painel-periodo') || 'null'); } catch (e) {}
+  if (s && s.preset && faixaPreset(s.preset)) return {...faixaPreset(s.preset), preset: s.preset};
+  if (s && s.inicio && s.inicio >= DADOS.historico.inicio && s.fim <= DADOS.historico.fim) return {inicio: s.inicio, fim: s.fim, preset: null};
+  return {...DADOS.presets.mes_atual, preset: 'mes_atual'};
+}
+function ajustarPeriodo() {   // a cada nova leitura, períodos prontos andam junto com o dia
+  if (!PER) PER = lerPeriodo();
+  else if (PER.preset) PER = {...faixaPreset(PER.preset), preset: PER.preset};
+  else if (PER.inicio < DADOS.historico.inicio || PER.fim > DADOS.historico.fim) PER = {...DADOS.presets.mes_atual, preset: 'mes_atual'};
+}
+
+/* ---------- leitura das tabelas por dia ---------- */
+function tab(t) { const i = {}; (t?.colunas || []).forEach((c, n) => i[c] = n); return {i, linhas: t?.linhas || []}; }
+function somar(t, p, campos, chave) {   // soma no período; com chave, agrupa
+  const {i, linhas} = tab(t), tot = {}, grupos = {};
+  campos.forEach(c => tot[c] = 0);
+  for (const l of linhas) {
+    if (!dentro(l[i.data], p)) continue;
+    const alvo = chave ? (grupos[l[i[chave]]] ??= Object.fromEntries(campos.map(c => [c, 0]))) : tot;
+    for (const c of campos) alvo[c] += l[i[c]] || 0;
+    if (chave) for (const c of campos) tot[c] += l[i[c]] || 0;
+  }
+  return chave ? {tot, grupos} : tot;
+}
+function porDia(t, p, campo) { const m = {}; const {i, linhas} = tab(t); for (const l of linhas) if (dentro(l[i.data], p)) m[l[i.data]] = (m[l[i.data]] || 0) + (l[i[campo]] || 0); return dias(p).map(d => m[d] || 0); }
+
+/* ---------- Meta ---------- */
+const MCAMPOS = ['investimento','impressoes','cliques','formulario','site','conversas','site_descontado'];
+function metaPeriodo(p) {
+  const m = DADOS.meta; if (!vivo(m)) return null;
+  const r = somar(m.campanhas_diario, p, MCAMPOS, 'id');
+  const t = r.tot; t.resultados = t.formulario + t.site + t.conversas;
+  const k = presetDe(p); t.alcance = k && m.alcance?.[k] != null ? m.alcance[k] : null;
+  t.campanhas = Object.entries(r.grupos).map(([id, g]) => ({id, nome: m.campanhas_nomes[id] || id, ...g, resultados: g.formulario + g.site + g.conversas}))
+    .filter(c => c.investimento > 0 || c.impressoes > 0).sort((a, b) => b.investimento - a.investimento);
+  return t;
+}
+function metaAnuncios(p, n = 6) {
+  const m = DADOS.meta, r = somar(m.anuncios_diario, p, MCAMPOS, 'id');
+  return Object.entries(r.grupos).map(([id, g]) => {
+    const info = m.anuncios[id] || {}, res = g.formulario + g.site + g.conversas;
+    return {id, ...g, ...info, campanhaNome: m.campanhas_nomes[info.campanha] || '', resultados: res, cpr: div(g.investimento, res), ctr: div(g.cliques, g.impressoes)};
+  }).filter(a => a.resultados > 0 && a.investimento >= 20).sort((a, b) => b.resultados - a.resultados || a.cpr - b.cpr).slice(0, n);
+}
+
+/* ---------- Google ---------- */
+const GCAMPOS = ['investimento','impressoes','cliques','conversoes'];
+function googlePeriodo(p) {
+  const g = DADOS.google_ads;
+  if (!ok(g)) return {indisp: g?.status === 'erro' ? `a última coleta falhou (${g.motivo})` : 'integração pendente'};
+  if (g.status === 'snapshot') {
+    if (g.periodo.inicio !== p.inicio || g.periodo.fim !== p.fim)
+      return {indisp: `a cópia manual só cobre ${dBR(g.periodo.inicio)} a ${dBRa(g.periodo.fim)}`};
+    return {...g.resumo, campanhas: g.campanhas, palavras: g.palavras_chave, termos: [], snapshot: true};
+  }
+  const r = somar(g.campanhas_diario, p, GCAMPOS, 'id');
+  const campanhas = Object.entries(r.grupos).map(([id, c]) => ({id, nome: g.campanhas_nomes[id]?.nome || id, tipo: g.campanhas_nomes[id]?.tipo, ...c, custo_por_conversao: div(c.investimento, c.conversoes)}))
+    .filter(c => c.impressoes > 0).sort((a, b) => b.investimento - a.investimento);
+  const pk = somar(g.palavras_diario, p, GCAMPOS, 'palavra');
+  const palavras = Object.entries(pk.grupos).map(([palavra, c]) => ({palavra, ...c, cpc: div(c.investimento, c.cliques)}))
+    .filter(c => c.impressoes > 0).sort((a, b) => b.conversoes - a.conversoes || b.cliques - a.cliques);
+  const tk = somar(g.termos_diario, p, GCAMPOS, 'termo');
+  const termos = Object.entries(tk.grupos).map(([termo, c]) => ({termo, ...c})).sort((a, b) => b.conversoes - a.conversoes || b.cliques - a.cliques).slice(0, 15);
+  return {...r.tot, campanhas, palavras, termos};
+}
+
+/* ---------- HubSpot ---------- */
+function hubPeriodo(p) {
+  const h = DADOS.hubspot; if (!vivo(h)) return null;
+  const c = tab(h.contatos_diario), n = tab(h.negocios);
+  const o = {contatos: 0, porFonte: {}, porMidia: {meta:0, google:0, linkedin:0, outro:0}, wpp: 0, gc: {},
+             negocios: 0, negMidia: {meta:0, google:0, linkedin:0, outro:0}, negCanal: {}, porEtapa: {},
+             sql: 0, sqlMidia: {meta:0, google:0, linkedin:0, outro:0}, sqlCanal: {}, sqlDia: {}, ultimas: []};
+  for (const l of c.linhas) {
+    if (!dentro(l[c.i.data], p)) continue;
+    const q = l[c.i.contatos];
+    o.contatos += q; o.porFonte[l[c.i.fonte]] = (o.porFonte[l[c.i.fonte]] || 0) + q;
+    o.porMidia[l[c.i.midia]] += q;
+    if (l[c.i.whatsapp]) o.wpp += q;
+    if (l[c.i.gc_mensagem]) o.gc[l[c.i.gc_mensagem]] = (o.gc[l[c.i.gc_mensagem]] || 0) + q;
+  }
+  for (const l of n.linhas) {
+    const canal = l[n.i.canal] || 'Sem canal preenchido', midia = l[n.i.midia];
+    if (dentro(l[n.i.criado], p)) {
+      o.negocios++; o.negMidia[midia]++; o.negCanal[canal] = (o.negCanal[canal] || 0) + 1;
+      o.porEtapa[l[n.i.etapa]] = (o.porEtapa[l[n.i.etapa]] || 0) + 1;
+    }
+    if (dentro(l[n.i.entrou_sql], p)) {
+      o.sql++; o.sqlMidia[midia]++; o.sqlCanal[canal] = (o.sqlCanal[canal] || 0) + 1;
+      o.sqlDia[l[n.i.entrou_sql]] = (o.sqlDia[l[n.i.entrou_sql]] || 0) + 1;
+      o.ultimas.push({nome: l[n.i.nome], em: l[n.i.sql_em], canal});
+    }
+  }
+  o.ultimas.sort((a, b) => (b.em || '').localeCompare(a.em || '')); o.ultimas = o.ultimas.slice(0, 8);
+  return o;
+}
+function ga4Periodo(p) { const g = DADOS.ga4; return vivo(g) ? somar(g.diario, p, ['cliques']).cliques : null; }
+
+/* ---------- componentes ---------- */
+function delta(atual, anterior, inverso = false) {
+  if (anterior == null || atual == null || !anterior) return '<span class="delta neu">sem base de comparação</span>';
+  const v = (atual - anterior) / anterior, bom = inverso ? v < 0 : v > 0;
+  const cls = Math.abs(v) < 0.005 ? 'neu' : (bom ? 'up' : 'down');
+  return `<span class="delta ${cls}">${v > 0 ? '▲' : v < 0 ? '▼' : '•'} ${pct(Math.abs(v))}</span> <span class="sub">vs período anterior</span>`;
+}
+function kpi({rot, valor, fmt = int, sub = '', cor, classe = ''}) {
+  return `<div class="card kpi ${classe}"><div class="rot">${cor ? `<i style="background:${cor}"></i>` : ''}${rot}</div>
+    <div class="num" data-valor="${valor ?? ''}" data-fmt="${fmt.name}">${valor == null ? '—' : fmt(0)}</div><div class="sub">${sub}</div></div>`;
+}
+function aviso(texto, tipo = '') {
+  return `<div class="aviso ${tipo}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.01"/></svg><div>${texto}</div></div>`;
+}
+function pendente(bloco, nome) {
+  if (!bloco) return aviso(`${nome}: sem dados.`);
+  if (bloco.status === 'erro') return aviso(`${nome}: a última coleta falhou (${esc(bloco.motivo)}).`);
+  return aviso(`${nome}: integração pendente — ${esc(bloco.motivo)}. Veja a aba Integrações.`, 'info');
+}
+
+/* Funil em trapézios (estilo da referência). etapas: [{tit, val, unid, det, nota}]
+   A porcentagem compara com a última etapa anterior que tem número. */
+function funil(titulo, etapas, nota = '') {
+  let ant = null;
+  const n = etapas.length;
+  const html = etapas.map((e, k) => {
+    const w = 100 - k * (n > 1 ? Math.min(9, 50 / (n - 1)) : 0);
+    let pill = '';
+    if (e.val != null && ant) pill = `<span class="pill">${pct(div(e.val, ant), 2)} da etapa anterior</span>`;
+    if (e.val != null) ant = e.val;
+    const valor = e.val == null ? `<span class="val pend">—</span>` :
+      `<span class="val num" data-valor="${e.val}" data-fmt="${e.fmt?.name || 'int'}">0</span>${e.unid ? ` <span class="val"><small>${e.unid}</small></span>` : ''}`;
+    return `<div class="eta e${k % 7}" style="--w:${w}%"><div class="tit">${e.tit}</div><div class="linha"><span>${valor}</span>${pill}</div>${e.det ? `<div class="det">${e.det}</div>` : ''}</div>`;
+  }).join('');
+  return `<div class="card funil-card"><h2>${titulo}</h2><div class="funil">${html}</div>${nota ? `<div class="funil-nota">${nota}</div>` : ''}</div>`;
+}
+
+function cardsAnuncios(lista) {
+  if (!lista.length) return '<div class="vazio">Nenhum anúncio com resultado e gasto acima de R$ 20 no período.</div>';
+  return `<div class="ads">${lista.map((a, i) => `<div class="ad">
+    <div class="img" style="background-image:url('${esc(a.imagem || '')}')"><span class="pos">#${i+1}</span>${a.tipo ? `<span class="tipo">${a.tipo === 'VIDEO' ? 'Vídeo' : 'Imagem'}</span>` : ''}</div>
+    <div class="info"><b title="${esc(a.nome)}">${esc(a.nome || a.id)}</b><small title="${esc(a.campanhaNome)}">${esc(a.campanhaNome)}</small>
+      <div class="mets"><div><b>${int(a.resultados)}</b>resultados</div><div><b>${brl(a.cpr)}</b>por resultado</div>
+      <div><b>${brl(a.investimento)}</b>investido</div><div><b>${pct(a.ctr, 2)}</b>CTR (link)</div></div>
+      <div style="margin-top:8px;font-size:11px;color:var(--subtle)">${[a.formulario && `${int(a.formulario)} formulário`, a.conversas && `${int(a.conversas)} conversas`, a.site && `${int(a.site)} site`].filter(Boolean).join(' · ')}</div>
+    </div></div>`).join('')}</div>`;
+}
+function rankPalavras(lista) {
+  if (!lista.length) return '<div class="vazio">Nenhuma palavra-chave com impressões no período.</div>';
+  const max = Math.max(...lista.map(p => p.cliques), 1);
+  return `<div class="rank">${lista.map((p, i) => `<div class="lin"><div class="pos">${String(i+1).padStart(2,'0')}</div>
+    <div class="txt"><b title="${esc(p.palavra)}">${esc(p.palavra)}</b><div class="bar"><span data-w="${(p.cliques/max*100).toFixed(1)}%"></span></div></div>
+    <div class="val">${int(p.cliques)} cliques<small>${dec(p.conversoes)} conv. · CPC ${brl(p.cpc)}</small></div></div>`).join('')}</div>`;
+}
+function rankSimples(pares) {
+  if (!pares.length) return '<div class="vazio">Sem dados no período.</div>';
+  const max = Math.max(...pares.map(p => p[1]), 1);
+  return `<div class="rank">${pares.map(([n, v], i) => `<div class="lin"><div class="pos">${i+1}</div><div class="txt"><b>${esc(n)}</b><div class="bar"><span data-w="${(v/max*100).toFixed(1)}%"></span></div></div><div class="val">${int(v)}</div></div>`).join('')}</div>`;
+}
+const ordenar = obj => Object.entries(obj).sort((a, b) => b[1] - a[1]);
+
+/* ---------- animações e gráficos ---------- */
+function animar(raiz) {
+  raiz.querySelectorAll('.num[data-valor]').forEach(el => {
+    const alvo = parseFloat(el.dataset.valor); if (isNaN(alvo)) return;
+    const fmt = {brl, int, pct, dec}[el.dataset.fmt] || int;
+    const t0 = performance.now(), dur = 1300;
+    const passo = t => { const q = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - q, 3); el.textContent = fmt(alvo * e); if (q < 1) requestAnimationFrame(passo); else el.textContent = fmt(alvo); };
+    requestAnimationFrame(passo);
+  });
+  raiz.querySelectorAll('.card, .ad, .tabela tr, .ult .it').forEach((el, i) => el.style.animationDelay = (Math.min(i, 24) * 45) + 'ms');
+  setTimeout(() => {
+    raiz.querySelectorAll('.rank .bar span[data-w]').forEach(s => s.style.width = s.dataset.w);
+    raiz.querySelectorAll('.funil .eta').forEach((s, i) => setTimeout(() => s.classList.add('vis'), i * 110));
+  }, 150);
+}
+Chart.defaults.color = '#8a93a6';
+Chart.defaults.font.family = 'Inter, Arial, sans-serif';
+Chart.defaults.borderColor = 'rgba(255,255,255,.06)';
+Chart.defaults.animation.duration = 1200;
+function grafico(id, cfg) { const el = document.getElementById(id); if (el) graficos.push(new Chart(el, cfg)); }
+function gradiente(id, cor) { const ctx = document.getElementById(id)?.getContext('2d'); if (!ctx) return cor; const g = ctx.createLinearGradient(0, 0, 0, 260); g.addColorStop(0, cor + '66'); g.addColorStop(1, cor + '00'); return g; }
+const tooltipBR = {callbacks:{label: c => ` ${c.dataset.label}: ${c.dataset.moeda ? brl(c.parsed.y ?? c.parsed) : int(c.parsed.y ?? c.parsed)}`}};
+const CORES = ['#eabd32','#4f86d6','#e98a5b','#39a770','#7aa7e0','#c69f3b','#a9d9be','#f4cfa5','#8a93a6','#f1b9bc','#b38fd1'];
+function donut(id, pares, pos = 'right') {
+  grafico(id, {type:'doughnut', data:{labels: pares.map(p => p[0]), datasets:[{data: pares.map(p => p[1]), backgroundColor: CORES, borderColor:'#13162c', borderWidth:2}]},
+    options:{maintainAspectRatio:false, cutout:'62%', plugins:{legend:{position: pos, labels:{boxWidth:10, font:{size:11}}}}}});
+}
+const rotFonte = k => DADOS.hubspot?.fontes_rotulos?.[k] || k;
+
+/* ======================================================================
+   Seções
+   ====================================================================== */
+const SECOES = {
+  geral:    ['Visão Geral', renderGeral],
+  google:   ['Google Ads', renderGoogle],
+  meta:     ['Meta Ads (Facebook e Instagram)', renderMeta],
+  linkedin: ['LinkedIn Ads', renderLinkedin],
+  hubspot:  ['Marketing → Comercial (HubSpot)', renderHubspot],
+  whatsapp: ['Leads do WhatsApp', renderWhatsapp],
+  fontes:   ['Integrações e fontes', renderFontes],
+};
+const ETAPA_NEG = 'Negócios no pré-vendas', ETAPA_SQL = 'Oportunidades qualificadas (SQL)';
+const NOTA_HUB = 'Contatos, negócios e SQL de cada mídia usam a origem original registrada no HubSpot. Leads cadastrados à mão (ex.: WhatsApp) ficam na aba WhatsApp.';
+
+function avisoPixel(m) {
+  if (!m || !m.site_descontado) return '';
+  return aviso(`<b>${int(m.site_descontado)} leads de pixel descontados</b> (03 e 04/11/2026). ${esc(DADOS.meta.pixel_aviso)} O número real de inscritos do Aulão está no HubSpot.`);
+}
+function alcanceDet(m) { return m.alcance == null ? 'disponível só nos períodos prontos (botão Período)' : `Meta · ${esc(DADOS.meta.alcance_obs)}`; }
+
+function renderGeral(p, c) {
+  const m = metaPeriodo(p), mc = c && metaPeriodo(c), g = googlePeriodo(p), h = hubPeriodo(p), hc = c && hubPeriodo(c);
+  const gOk = !g.indisp;
+  const inv = (m?.investimento || 0) + (gOk ? g.investimento : 0);
+  const invC = c ? (mc?.investimento || 0) + (vivo(DADOS.google_ads) ? googlePeriodo(c).investimento || 0 : 0) : null;
+  const leads = (m?.resultados || 0) + (gOk ? g.conversoes : 0);
+  let html = '';
+  if (!gOk) html += aviso(`Google Ads fora da soma deste período: ${esc(g.indisp)}.`, 'info');
+  html += avisoPixel(m);
+  html += `<div class="grid g5">
+    ${kpi({rot:'Investimento em mídia', valor: inv, fmt: brl, classe:'destaque', sub:`Meta ${brl(m?.investimento)} · Google ${gOk ? brl(g.investimento) : '—'} · LinkedIn —`})}
+    ${kpi({rot:'Leads e conversões', valor: leads, sub:`Meta ${int(m?.resultados)} · Google ${gOk ? dec(g.conversoes) : '—'} (conversões)`})}
+    ${kpi({rot:'Contatos novos (HubSpot)', cor:'var(--hub)', valor: h?.contatos, sub: h ? delta(h.contatos, hc?.contatos) : ''})}
+    ${kpi({rot:'Mãos levantadas (SQL)', cor:'var(--yellow)', valor: h?.sql, sub: h ? delta(h.sql, hc?.sql) : ''})}
+    ${kpi({rot:'Investimento ÷ SQL', valor: h?.sql ? div(inv, h.sql) : null, fmt: brl, sub:'todas as origens de SQL'})}
+  </div>`;
+  const pag = h ? h.porMidia.meta + h.porMidia.google + h.porMidia.linkedin : null;
+  html += `<div class="grid g21">` + funil('Funil da mídia paga', [
+    {tit:'Impressões', val: (m?.impressoes || 0) + (gOk ? g.impressoes : 0), det:`Meta ${int(m?.impressoes)} · Google ${gOk ? int(g.impressoes) : '—'} · LinkedIn —`},
+    {tit:'Alcance', val: m?.alcance ?? null, det: m ? alcanceDet(m) : ''},
+    {tit:'Cliques', val: (m?.cliques || 0) + (gOk ? g.cliques : 0), det:`Cliques no link Meta ${int(m?.cliques)} · Cliques Google ${gOk ? int(g.cliques) : '—'}`},
+    {tit:'Leads e conversões nas plataformas', val: leads, det:`Formulário ${int(m?.formulario)} · Conversas WhatsApp ${int(m?.conversas)} · Site ${int(m?.site)} · Conversões Google ${gOk ? dec(g.conversoes) : '—'}`},
+    {tit:'Contatos no HubSpot vindos de mídia paga', val: pag, unid:'contatos', det: h ? `Meta ${int(h.porMidia.meta)} · Google ${int(h.porMidia.google)} · LinkedIn ${int(h.porMidia.linkedin)}` : 'HubSpot pendente'},
+    {tit: ETAPA_NEG, val: h ? h.negMidia.meta + h.negMidia.google + h.negMidia.linkedin : null, unid:'negócios', det:'de contatos com origem em mídia paga'},
+    {tit: ETAPA_SQL, val: h ? h.sqlMidia.meta + h.sqlMidia.google + h.sqlMidia.linkedin : null, unid:'SQL', det:`mãos levantadas para o comercial · total de todas as origens: ${int(h?.sql)}`},
+  ], NOTA_HUB) + `<div class="grid" style="align-content:start">
+      <div class="card"><h2>Investimento por dia</h2><div class="chart-box baixo"><canvas id="c-inv"></canvas></div></div>
+      <div class="card"><h2>Origem dos contatos novos <span class="tag">HubSpot</span></h2><div class="chart-box baixo"><canvas id="c-fontes"></canvas></div></div>
+    </div></div>`;
+  html += `<div class="grid g2">
+    <div class="card"><h2>Anúncios do Meta que mais se destacaram</h2>${vivo(DADOS.meta) ? cardsAnuncios(metaAnuncios(p, 3)) : pendente(DADOS.meta, 'Meta')}</div>
+    <div class="card"><h2>Palavras-chave com mais resultado <span class="tag">Google Ads</span></h2>${gOk ? rankPalavras(g.palavras.slice(0, 7)) : aviso(`Google Ads: ${esc(g.indisp)}.`, 'info')}</div>
+  </div>`;
+  return {html, depois() {
+    const ds = [];
+    if (m) ds.push({label:'Meta', data: porDia(DADOS.meta.campanhas_diario, p, 'investimento'), borderColor:'#4f86d6', backgroundColor: gradiente('c-inv','#4f86d6'), fill:true, tension:.35, pointRadius:0, borderWidth:2, moeda:true});
+    if (vivo(DADOS.google_ads)) ds.push({label:'Google', data: porDia(DADOS.google_ads.campanhas_diario, p, 'investimento'), borderColor:'#eabd32', backgroundColor: gradiente('c-inv','#eabd32'), fill:true, tension:.35, pointRadius:0, borderWidth:2, moeda:true});
+    grafico('c-inv', {type:'line', data:{labels: dias(p).map(dBR), datasets: ds}, options:{maintainAspectRatio:false, interaction:{mode:'index', intersect:false},
+      plugins:{legend:{display: ds.length > 1, labels:{boxWidth:10}}, tooltip: tooltipBR}, scales:{y:{ticks:{callback: v => 'R$ ' + int(v)}}, x:{grid:{display:false}, ticks:{maxTicksLimit:10}}}}});
+    if (h) donut('c-fontes', ordenar(h.porFonte).map(([k, v]) => [rotFonte(k), v]));
+  }};
+}
+
+function renderGoogle(p, c) {
+  const g = googlePeriodo(p), h = hubPeriodo(p);
+  if (g.indisp) return {html: aviso(`Google Ads: ${esc(g.indisp)}.${DADOS.google_ads?.status === 'snapshot' ? ' Escolha esse período no botão Período para ver a cópia.' : ' Veja a aba Integrações.'}`, 'info')
+    + funil('Funil do Google Ads', [{tit:'Impressões', val:null}, {tit:'Cliques', val:null}, {tit:'Conversões', val:null},
+      {tit:'Contatos no HubSpot (pesquisa paga)', val: h?.porMidia.google ?? null, unid:'contatos'},
+      {tit: ETAPA_NEG, val: h?.negMidia.google ?? null, unid:'negócios'}, {tit: ETAPA_SQL, val: h?.sqlMidia.google ?? null, unid:'SQL'}], NOTA_HUB)};
+  const gc = c && vivo(DADOS.google_ads) ? googlePeriodo(c) : null;
+  let html = g.snapshot ? aviso(`<b>Cópia manual.</b> ${esc(DADOS.google_ads.aviso)}`) : '';
+  html += `<div class="grid g5">
+    ${kpi({rot:'Investimento', valor:g.investimento, fmt:brl, classe:'destaque', sub: gc ? delta(g.investimento, gc.investimento) : 'Conta 759-129-6003'})}
+    ${kpi({rot:'Impressões', valor:g.impressoes, sub: gc ? delta(g.impressoes, gc.impressoes) : ''})}
+    ${kpi({rot:'Cliques', valor:g.cliques, sub:`CTR ${pct(div(g.cliques, g.impressoes), 2)}`})}
+    ${kpi({rot:'CPC médio', valor:div(g.investimento, g.cliques), fmt:brl})}
+    ${kpi({rot:'Conversões', valor:g.conversoes, fmt:dec, sub:`Custo por conversão ${brl(div(g.investimento, g.conversoes))}`})}
+  </div>`;
+  html += `<div class="grid g2">` + funil('Funil do Google Ads', [
+    {tit:'Impressões', val:g.impressoes},
+    {tit:'Cliques', val:g.cliques, det:`CPC médio ${brl(div(g.investimento, g.cliques))}`},
+    {tit:'Conversões (como o Google Ads conta)', val:g.conversoes, fmt:dec, unid:'conversões', det:'em Demand Gen/YouTube podem incluir engajamento'},
+    {tit:'Contatos no HubSpot (pesquisa paga)', val: h?.porMidia.google ?? null, unid:'contatos'},
+    {tit: ETAPA_NEG, val: h?.negMidia.google ?? null, unid:'negócios'},
+    {tit: ETAPA_SQL, val: h?.sqlMidia.google ?? null, unid:'SQL', det:'mãos levantadas com origem Google'},
+  ], NOTA_HUB) + `<div class="card"><h2>Palavras-chave com mais resultado <span class="tag">cliques e conversões</span></h2>${rankPalavras(g.palavras.slice(0, 10))}</div></div>`;
+  html += `<div class="card"><h2>Campanhas <span class="tag">${g.campanhas.length} com veiculação</span></h2><div class="rolagem"><table class="tabela">
+    <thead><tr><th>Campanha</th><th>Tipo</th><th>Invest.</th><th>Impr.</th><th>Cliques</th><th>CTR</th><th>Conv.</th><th>Custo/conv.</th></tr></thead><tbody>
+    ${g.campanhas.map(k => `<tr><td><span class="nome" title="${esc(k.nome)}">${esc(k.nome)}</span></td><td>${esc(k.tipo || '')}</td><td>${brl(k.investimento)}</td><td>${int(k.impressoes)}</td><td>${int(k.cliques)}</td><td>${pct(div(k.cliques, k.impressoes), 2)}</td><td>${dec(k.conversoes)}</td><td>${brl(div(k.investimento, k.conversoes))}</td></tr>`).join('')}
+    </tbody></table></div></div>`;
+  html += `<div class="card"><h2>Todas as palavras-chave <span class="tag">${g.palavras.length} com impressões</span></h2><div class="rolagem"><table class="tabela">
+    <thead><tr><th>Palavra-chave</th><th>Invest.</th><th>Impressões</th><th>Cliques</th><th>CTR</th><th>CPC</th><th>Conversões</th></tr></thead><tbody>
+    ${g.palavras.map(k => `<tr><td>${esc(k.palavra)}</td><td>${brl(k.investimento)}</td><td>${int(k.impressoes)}</td><td>${int(k.cliques)}</td><td>${pct(div(k.cliques, k.impressoes), 2)}</td><td>${brl(div(k.investimento, k.cliques))}</td><td>${dec(k.conversoes)}</td></tr>`).join('')}
+    </tbody></table></div></div>`;
+  if (g.termos.length) html += `<div class="card"><h2>Termos pesquisados que geraram clique</h2><div class="rolagem"><table class="tabela"><thead><tr><th>Termo pesquisado</th><th>Cliques</th><th>Conversões</th><th>Invest.</th></tr></thead><tbody>
+    ${g.termos.map(t => `<tr><td>${esc(t.termo)}</td><td>${int(t.cliques)}</td><td>${dec(t.conversoes)}</td><td>${brl(t.investimento)}</td></tr>`).join('')}</tbody></table></div></div>`;
+  return {html};
+}
+
+function renderMeta(p, c) {
+  if (!vivo(DADOS.meta)) return {html: pendente(DADOS.meta, 'Meta Ads')};
+  const m = metaPeriodo(p), mc = c ? metaPeriodo(c) : null, h = hubPeriodo(p);
+  let html = avisoPixel(m);
+  html += `<div class="grid g4">
+    ${kpi({rot:'Investimento', valor:m.investimento, fmt:brl, classe:'destaque', sub: delta(m.investimento, mc?.investimento)})}
+    ${kpi({rot:'Resultados', cor:'var(--yellow)', valor:m.resultados, sub: delta(m.resultados, mc?.resultados)})}
+    ${kpi({rot:'Custo por resultado', valor:div(m.investimento, m.resultados), fmt:brl, sub: delta(div(m.investimento, m.resultados), div(mc?.investimento, mc?.resultados), true)})}
+    ${kpi({rot:'CTR (link)', valor:div(m.cliques, m.impressoes), fmt:pct, sub:`CPC ${brl(div(m.investimento, m.cliques))}`})}
+  </div>`;
+  html += `<div class="grid g21">` + funil('Funil do Meta Ads', [
+    {tit:'Impressões', val:m.impressoes, det:`CPM ${brl(div(m.investimento, m.impressoes) * 1000)}`},
+    {tit:'Alcance', val:m.alcance, det: alcanceDet(m)},
+    {tit:'Cliques no link', val:m.cliques, det:`CPC ${brl(div(m.investimento, m.cliques))}`},
+    {tit:'Leads', val:m.resultados, unid:'leads', det:`Formulário ${int(m.formulario)} · Conversas WhatsApp ${int(m.conversas)} · Site (pixel) ${int(m.site)} · dado da plataforma`},
+    {tit:'Contatos no HubSpot (origem Meta)', val: h?.porMidia.meta ?? null, unid:'contatos', det:'Facebook/Instagram pagos como origem original'},
+    {tit: ETAPA_NEG, val: h?.negMidia.meta ?? null, unid:'negócios'},
+    {tit: ETAPA_SQL, val: h?.sqlMidia.meta ?? null, unid:'SQL', det:'mãos levantadas com origem Meta'},
+  ], NOTA_HUB) + `<div class="grid" style="align-content:start">
+      <div class="card"><h2>Leads por tipo</h2><div class="chart-box baixo"><canvas id="c-meta-tipo"></canvas></div></div>
+      <div class="card"><h2>Investimento e leads por dia</h2><div class="chart-box baixo"><canvas id="c-meta"></canvas></div></div>
+    </div></div>`;
+  html += `<div class="card"><h2>Anúncios que mais se destacaram <span class="tag">por leads · gasto mínimo R$ 20</span></h2>${cardsAnuncios(metaAnuncios(p, 6))}</div>`;
+  html += `<div class="card"><h2>Campanhas <span class="tag">${m.campanhas.length} com veiculação</span></h2><div class="rolagem"><table class="tabela">
+    <thead><tr><th>Campanha</th><th>Invest.</th><th>Impressões</th><th>CTR</th><th>Formulário</th><th>Conversas</th><th>Site</th><th>Leads</th><th>Custo/lead</th></tr></thead><tbody>
+    ${m.campanhas.map(k => `<tr><td><span class="nome" title="${esc(k.nome)}">${esc(k.nome)}</span></td><td>${brl(k.investimento)}</td><td>${int(k.impressoes)}</td><td>${pct(div(k.cliques, k.impressoes), 2)}</td><td>${int(k.formulario)}</td><td>${int(k.conversas)}</td><td>${int(k.site)}${k.site_descontado ? ` <span title="${int(k.site_descontado)} descontados de 03–04/11" style="color:var(--orange)">*</span>` : ''}</td><td><b>${int(k.resultados)}</b></td><td>${brl(div(k.investimento, k.resultados))}</td></tr>`).join('')}
+    </tbody></table></div></div>`;
+  return {html, depois() {
+    const t = DADOS.meta.campanhas_diario, inv = porDia(t, p, 'investimento');
+    const res = dias(p).map((d, i) => porDia(t, {inicio:d, fim:d}, 'formulario')[0] + porDia(t, {inicio:d, fim:d}, 'site')[0] + porDia(t, {inicio:d, fim:d}, 'conversas')[0]);
+    grafico('c-meta', {data:{labels: dias(p).map(dBR), datasets:[
+      {type:'bar', label:'Investimento', data: inv, backgroundColor:'rgba(79,134,214,.55)', borderRadius:5, yAxisID:'y', moeda:true},
+      {type:'line', label:'Leads', data: res, borderColor:'#eabd32', backgroundColor:'#eabd32', tension:.35, pointRadius:0, borderWidth:2, yAxisID:'y1'}]},
+      options:{maintainAspectRatio:false, interaction:{mode:'index', intersect:false}, plugins:{legend:{labels:{boxWidth:10}}, tooltip: tooltipBR},
+        scales:{y:{ticks:{callback: v => 'R$ ' + int(v)}}, y1:{position:'right', grid:{display:false}}, x:{grid:{display:false}, ticks:{maxTicksLimit:8}}}}});
+    donut('c-meta-tipo', [['Formulário', m.formulario], ['Conversas WhatsApp', m.conversas], ['Site (pixel)', m.site]]);
+  }};
+}
+
+function renderLinkedin(p) {
+  const l = DADOS.linkedin, h = hubPeriodo(p);
+  let html = aviso(`LinkedIn Ads ainda sem números: ${esc(l?.motivo || 'integração pendente')}.`, 'info');
+  html += `<div class="grid g2">` + funil('Funil do LinkedIn Ads', [
+    {tit:'Impressões', val:null, det:'aguardando integração'},
+    {tit:'Alcance', val:null, det:'aguardando integração'},
+    {tit:'Cliques', val:null, det:'aguardando integração'},
+    {tit:'Leads (Lead Gen Forms)', val:null, det:'aguardando integração'},
+    {tit:'Contatos no HubSpot (origem LinkedIn pago)', val: h?.porMidia.linkedin ?? null, unid:'contatos'},
+    {tit: ETAPA_NEG, val: h?.negMidia.linkedin ?? null, unid:'negócios'},
+    {tit: ETAPA_SQL, val: h?.sqlMidia.linkedin ?? null, unid:'SQL'},
+  ], NOTA_HUB) + `<div class="card"><h2>O que esta aba vai mostrar</h2><div class="ult">
+      ${['Investimento, impressões, cliques e CTR por campanha', 'Leads de Lead Gen Forms e custo por lead', 'Funil completo até as mãos levantadas no HubSpot', 'Comparação com o período anterior'].map(t => `<div class="it"><div class="av">in</div><div class="t"><b>${t}</b></div></div>`).join('')}
+    </div></div></div>`;
+  return {html};
+}
+
+function renderHubspot(p, c) {
+  if (!vivo(DADOS.hubspot)) return {html: pendente(DADOS.hubspot, 'HubSpot')};
+  const h = hubPeriodo(p), hc = c ? hubPeriodo(c) : null, H = DADOS.hubspot;
+  let html = `<div class="grid g4">
+    ${kpi({rot:'Contatos novos', cor:'var(--hub)', valor:h.contatos, sub: delta(h.contatos, hc?.contatos)})}
+    ${kpi({rot:'Negócios no pré-vendas', cor:'var(--meta)', valor:h.negocios, sub: delta(h.negocios, hc?.negocios)})}
+    ${kpi({rot:'Mãos levantadas (SQL)', valor:h.sql, classe:'destaque', sub: delta(h.sql, hc?.sql)})}
+    ${kpi({rot:'Negócio → SQL', valor:div(h.sql, h.negocios), fmt:pct, sub:'SQL no período ÷ negócios criados'})}
+  </div>`;
+  const nm = ordenar(h.negCanal).map(([k, v]) => `${k} ${int(v)}`).join(' · ');
+  const sm = ordenar(h.sqlCanal).map(([k, v]) => `${k} ${int(v)}`).join(' · ');
+  html += `<div class="grid g21">` + funil('Funil marketing → comercial (todas as origens)', [
+    {tit:'Contatos novos no HubSpot', val:h.contatos, unid:'contatos', det: ordenar(h.porFonte).slice(0, 3).map(([k, v]) => `${rotFonte(k)} ${int(v)}`).join(' · ')},
+    {tit: ETAPA_NEG, val:h.negocios, unid:'negócios', det: nm || '—'},
+    {tit: ETAPA_SQL, val:h.sql, unid:'SQL', det: sm || '—'},
+  ], '<b>Mão levantada</b> = negócio do Pipeline de pré-vendas que entrou em “Lead qualificado (SQL)” no período, mesmo que tenha sido criado antes.')
+  + `<div class="card"><h2>Últimas mãos levantadas</h2><div class="ult">${h.ultimas.map(u => `<div class="it"><div class="av">${esc((u.nome || '?').trim()[0])}</div><div class="t"><b title="${esc(u.nome)}">${esc(u.nome)}</b><small>${u.em ? dataHora(u.em) : ''} · ${esc(u.canal)}</small></div></div>`).join('') || '<div class="vazio">Nenhuma no período.</div>'}</div></div></div>`;
+  html += `<div class="grid g21">
+    <div class="card"><h2>Mãos levantadas por dia</h2><div class="chart-box"><canvas id="c-sql"></canvas></div></div>
+    <div class="card"><h2>SQL por canal de entrada</h2><div class="chart-box"><canvas id="c-sql-canal"></canvas></div></div>
+  </div>
+  <div class="grid g2">
+    <div class="card"><h2>Negócios criados no período, por etapa atual</h2>${rankSimples(Object.entries(H.etapas).map(([id, n]) => [n, h.porEtapa[id] || 0]))}</div>
+    <div class="card"><h2>Origem dos contatos novos</h2><div class="chart-box"><canvas id="c-fontes2"></canvas></div></div>
+  </div>`;
+  return {html, depois() {
+    const d = dias(p);
+    grafico('c-sql', {type:'bar', data:{labels: d.map(dBR), datasets:[{label:'SQL', data: d.map(x => h.sqlDia[x] || 0), backgroundColor: gradiente('c-sql','#eabd32'), borderColor:'#eabd32', borderWidth:1, borderRadius:6}]},
+      options:{maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{display:false}, ticks:{maxTicksLimit:12}}, y:{ticks:{precision:0}}}}});
+    donut('c-sql-canal', ordenar(h.sqlCanal), 'bottom');
+    donut('c-fontes2', ordenar(h.porFonte).map(([k, v]) => [rotFonte(k), v]));
+  }};
+}
+
+function renderWhatsapp(p, c) {
+  const m = metaPeriodo(p), mc = c ? metaPeriodo(c) : null, h = hubPeriodo(p), hc = c ? hubPeriodo(c) : null, ga = ga4Periodo(p);
+  const negW = h ? (h.negCanal.WhatsApp || 0) : null, sqlW = h ? (h.sqlCanal.WhatsApp || 0) : null;
+  let html = `<div class="grid g4">
+    ${kpi({rot:'Conversas iniciadas (Meta)', cor:'var(--meta)', valor: m?.conversas, classe:'destaque', sub: m ? delta(m.conversas, mc?.conversas) : 'pendente'})}
+    ${kpi({rot:'Contatos no HubSpot (WhatsApp)', cor:'var(--hub)', valor: h?.wpp, sub: h ? delta(h.wpp, hc?.wpp) : 'pendente'})}
+    ${kpi({rot:'SQL vindos do WhatsApp', cor:'var(--yellow)', valor: sqlW, sub: h ? delta(sqlW, hc?.sqlCanal.WhatsApp) : ''})}
+    ${kpi({rot:'Cliques no botão do site (GA4)', cor:'var(--wpp)', valor: ga, sub: ga == null ? 'integração pendente' : ''})}
+  </div>`;
+  const wppCamp = m ? m.campanhas.filter(k => k.conversas > 0).sort((a, b) => b.conversas - a.conversas) : [];
+  html += `<div class="grid g21">` + funil('Funil do WhatsApp', [
+    {tit:'Cliques no botão de WhatsApp do site', val: ga, det: ga == null ? 'GA4 pendente (ver Integrações)' : 'GA4 · intenção, sem garantia de mensagem'},
+    {tit:'Conversas iniciadas pelos anúncios', val: m?.conversas ?? null, unid:'conversas', det:'Meta · pessoas que mandaram mensagem a partir do anúncio'},
+    {tit:'Contatos criados no HubSpot', val: h?.wpp ?? null, unid:'contatos', det: h ? `canal WhatsApp ou mensagem do GC · ${ordenar(h.gc).map(([k, v]) => `${k} ${int(v)}`).join(' · ') || 'sem mensagem do GC'}` : ''},
+    {tit: ETAPA_NEG, val: negW, unid:'negócios', det:'canal de entrada WhatsApp'},
+    {tit: ETAPA_SQL, val: sqlW, unid:'SQL', det:'mãos levantadas com canal de entrada WhatsApp'},
+  ], 'As etapas vêm de fontes diferentes (GA4, Meta e HubSpot) e não são um caminho único da mesma pessoa; a porcentagem é só uma referência de proporção.')
+  + `<div class="card"><h2>Campanhas Meta que geraram conversas</h2><div class="rolagem"><table class="tabela"><thead><tr><th>Campanha</th><th>Invest.</th><th>Conversas</th><th>Custo/conversa*</th></tr></thead><tbody>
+      ${wppCamp.map(k => `<tr><td><span class="nome" title="${esc(k.nome)}" style="max-width:200px">${esc(k.nome)}</span></td><td>${brl(k.investimento)}</td><td><b>${int(k.conversas)}</b></td><td>${brl(div(k.investimento, k.conversas))}</td></tr>`).join('') || '<tr><td colspan="4">Sem conversas no período</td></tr>'}
+    </tbody></table></div><div style="margin-top:10px;font-size:11px;color:var(--subtle)">* investimento total da campanha ÷ conversas; campanhas com outros objetivos também geram conversas.</div></div></div>`;
+  return {html};
+}
+
+function renderFontes() {
+  const tag = b => !b ? '<span class="status pend">sem dados</span>' : b.desatualizado ? '<span class="status erro">desatualizado</span>' :
+    ({ok:'<span class="status ok">ao vivo</span>', snapshot:'<span class="status snap">cópia manual</span>', pendente:'<span class="status pend">pendente</span>', erro:'<span class="status erro">erro</span>'}[b.status] || '');
+  const linhas = [['Meta Ads', DADOS.meta], ['Google Ads', DADOS.google_ads], ['LinkedIn Ads', DADOS.linkedin], ['HubSpot (CRM)', DADOS.hubspot], ['GA4 (cliques no WhatsApp)', DADOS.ga4]];
+  return {html: `<div class="card"><h2>Situação de cada fonte</h2><div class="rolagem"><table class="tabela">
+    <thead><tr><th>Fonte</th><th>Situação</th><th style="text-align:left">Origem dos dados</th><th>Coletado em</th></tr></thead><tbody>
+    ${linhas.map(([n, b]) => `<tr><td>${n}</td><td>${tag(b)}</td><td style="text-align:left;white-space:normal">${esc(b?.fonte || b?.motivo || '—')}${b?.erro_atual ? `<br><small style="color:var(--red)">${esc(b.erro_atual)}</small>` : ''}</td><td>${b?.coletado_em ? dataHora(b.coletado_em) : '—'}</td></tr>`).join('')}
+    </tbody></table></div></div>
+    ${aviso(`Histórico disponível: ${dBRa(DADOS.historico.inicio)} a ${dBRa(DADOS.historico.fim)}. O passo a passo de cada integração está no arquivo <b>INTEGRACOES.md</b>.`, 'info')}`};
+}
+
+/* ======================================================================
+   Navegação, período, carga e atualização
+   ====================================================================== */
+function secaoAtual() { const s = location.hash.slice(1); return SECOES[s] ? s : 'geral'; }
+
+function desenhar() {
+  if (!DADOS) return;
+  graficos.forEach(g => g.destroy()); graficos = [];
+  const s = secaoAtual(), [titulo, render] = SECOES[s];
+  document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('ativo', a.dataset.s === s));
+  document.getElementById('titulo').textContent = titulo;
+  const c = comparacao(PER);
+  document.getElementById('periodo').textContent = `${dBRa(PER.inicio)} a ${dBRa(PER.fim)}` + (c ? ` · comparado com ${dBR(c.inicio)} a ${dBRa(c.fim)}` : ' · sem período anterior no histórico');
+  document.getElementById('btn-periodo-txt').textContent = PER.preset ? PRESETS.find(x => x[0] === PER.preset)[1] : `${dBR(PER.inicio)} – ${dBR(PER.fim)}`;
+  const {html, depois} = render(PER, c);
+  const alvo = document.getElementById('conteudo');
+  alvo.innerHTML = `<section class="secao">${html}</section>`;
+  animar(alvo);
+  if (depois) depois();
+}
+
+function cabecalho() {
+  document.getElementById('atualizado').textContent = 'Dados de ' + dataHora(DADOS.gerado_em);
+  const cls = b => !b ? '' : b.desatualizado ? 'err' : ({ok:'ok', snapshot:'snap', erro:'err'}[b.status] || '');
+  document.getElementById('dot-google').className = 'dot ' + cls(DADOS.google_ads);
+  document.getElementById('dot-meta').className = 'dot ' + cls(DADOS.meta);
+  document.getElementById('dot-linkedin').className = 'dot ' + cls(DADOS.linkedin);
+  document.getElementById('dot-hubspot').className = 'dot ' + cls(DADOS.hubspot);
+  document.getElementById('dot-wpp').className = 'dot ' + ([DADOS.meta, DADOS.hubspot].some(vivo) ? 'ok' : '');
+}
+
+/* --- seletor de período --- */
+const pop = document.getElementById('pop'), btnPer = document.getElementById('btn-periodo');
+function abrirPop(abrir) {
+  pop.classList.toggle('aberto', abrir); btnPer.setAttribute('aria-expanded', abrir);
+  if (!abrir) return;
+  const de = document.getElementById('data-de'), ate = document.getElementById('data-ate');
+  de.min = ate.min = DADOS.historico.inicio; de.max = ate.max = DADOS.historico.fim;
+  de.value = PER.inicio; ate.value = PER.fim;
+  document.getElementById('pop-lim').textContent = `Histórico: ${dBRa(DADOS.historico.inicio)} a ${dBRa(DADOS.historico.fim)}`;
+  document.getElementById('pop-erro').style.display = 'none';
+  document.getElementById('presets').innerHTML = PRESETS.map(([k, n]) => `<button data-p="${k}" class="${PER.preset === k ? 'sel' : ''}">${n}</button>`).join('');
+}
+function aplicar(novo) { PER = novo; salvarPeriodo(); abrirPop(false); desenhar(); }
+btnPer.addEventListener('click', e => { e.stopPropagation(); abrirPop(!pop.classList.contains('aberto')); });
+pop.addEventListener('click', e => {
+  e.stopPropagation();
+  const b = e.target.closest('[data-p]');
+  if (b) { const k = b.dataset.p; aplicar({...faixaPreset(k), preset: k}); }
+});
+document.getElementById('btn-aplicar').addEventListener('click', () => {
+  const de = document.getElementById('data-de').value, ate = document.getElementById('data-ate').value, err = document.getElementById('pop-erro');
+  let msg = '';
+  if (!de || !ate) msg = 'Escolha as duas datas.';
+  else if (de > ate) msg = 'A data inicial é depois da final.';
+  else if (de < DADOS.historico.inicio || ate > DADOS.historico.fim) msg = `Use datas entre ${dBRa(DADOS.historico.inicio)} e ${dBRa(DADOS.historico.fim)}.`;
+  if (msg) { err.textContent = msg; err.style.display = 'block'; return; }
+  const p = {inicio: de, fim: ate}; p.preset = presetDe(p); aplicar(p);
+});
+document.addEventListener('click', () => abrirPop(false));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') abrirPop(false); });
+
+async function carregar(forcar = false) {
+  try {
+    const r = await fetch(ARQUIVO + '?t=' + Date.now(), {cache: 'no-store'});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const novo = await r.json();
+    if (novo.versao !== 2) throw new Error('dados.json em formato antigo; rode o coletar_dados.py atualizado');
+    const mudou = forcar || !DADOS || novo.gerado_em !== DADOS.gerado_em;
+    DADOS = novo;
+    if (mudou) { ajustarPeriodo(); cabecalho(); desenhar(); }
+  } catch (e) {
+    if (!DADOS) document.getElementById('conteudo').innerHTML = aviso(`Não consegui ler ${ARQUIVO} (${esc(e.message)}). Abra o painel pelo site (não direto do arquivo) e confira se o dados.json está na mesma pasta.`);
+  }
+  proxima = Date.now() + INTERVALO;
+}
+function relogio() {
+  const falta = Math.max(0, proxima - Date.now());
+  document.getElementById('contagem').textContent = `${String(Math.floor(falta / 60000)).padStart(2, '0')}:${String(Math.floor(falta / 1000) % 60).padStart(2, '0')}`;
+  document.getElementById('progresso').style.width = (100 - falta / INTERVALO * 100) + '%';
+  if (falta <= 0) carregar();
+}
+window.addEventListener('hashchange', desenhar);
+carregar();
+setInterval(relogio, 1000);
+</script>
+</body>
+</html>

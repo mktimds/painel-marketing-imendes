@@ -1,0 +1,8 @@
+dados.json
+dados.json.tmp
+*.env
+__pycache__/
+.DS_Store
+# repositório público: números de campanha não vão para o Git
+google_ads_snapshot.json
+.impeccable/
