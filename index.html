@@ -394,6 +394,14 @@ function hubPeriodo(p) {
   return o;
 }
 function ga4Periodo(p) { const g = DADOS.ga4; return vivo(g) ? somar(g.diario, p, ['cliques']).cliques : null; }
+// Cliques no WhatsApp do site por mídia (origem/mídia da sessão no GA4): meta, google, linkedin, outras
+function ga4Midia(p) {
+  const g = DADOS.ga4; if (!vivo(g) || !g.diario.colunas.includes('midia')) return null;
+  const r = somar(g.diario, p, ['cliques'], 'midia'), o = {meta:0, google:0, linkedin:0, outras:0};
+  for (const [k, v] of Object.entries(r.grupos)) o[k] = (o[k] || 0) + v.cliques;
+  return o;
+}
+const wppSite = (gm, k) => gm ? `Cliques no WhatsApp do site vindos daqui: ${int(gm[k])} (GA4)` : 'Cliques no WhatsApp do site: GA4 pendente';
 
 /* ---------- componentes ---------- */
 function delta(atual, anterior, inverso = false) {
@@ -566,7 +574,7 @@ function renderGoogle(p, c) {
   </div>`;
   html += `<div class="grid g2">` + funil('Funil do Google Ads', [
     {tit:'Impressões', val:g.impressoes},
-    {tit:'Cliques', val:g.cliques, det:`CPC médio ${brl(div(g.investimento, g.cliques))}`},
+    {tit:'Cliques', val:g.cliques, det:`CPC médio ${brl(div(g.investimento, g.cliques))} · ${wppSite(ga4Midia(p), 'google')}`},
     {tit:'Conversões (como o Google Ads conta)', val:g.conversoes, fmt:dec, unid:'conversões', det:'em Demand Gen/YouTube podem incluir engajamento'},
     {tit:'Contatos no HubSpot (pesquisa paga)', val: h?.porMidia.google ?? null, unid:'contatos'},
     {tit: ETAPA_NEG, val: h?.negMidia.google ?? null, unid:'negócios'},
@@ -598,7 +606,7 @@ function renderMeta(p, c) {
   html += `<div class="grid g21">` + funil('Funil do Meta Ads', [
     {tit:'Impressões', val:m.impressoes, det:`CPM ${brl(div(m.investimento, m.impressoes) * 1000)}`},
     {tit:'Alcance', val:m.alcance, det: alcanceDet(m)},
-    {tit:'Cliques no link', val:m.cliques, det:`CPC ${brl(div(m.investimento, m.cliques))}`},
+    {tit:'Cliques no link', val:m.cliques, det:`CPC ${brl(div(m.investimento, m.cliques))} · ${wppSite(ga4Midia(p), 'meta')}`},
     {tit:'Leads', val:m.resultados, unid:'leads', det:`Formulário ${int(m.formulario)} · Conversas WhatsApp ${int(m.conversas)} · Site (pixel) ${int(m.site)} · dado da plataforma`},
     {tit:'Contatos no HubSpot (origem Meta)', val: h?.porMidia.meta ?? null, unid:'contatos', det:'Facebook/Instagram pagos como origem original'},
     {tit: ETAPA_NEG, val: h?.negMidia.meta ?? null, unid:'negócios'},
@@ -630,7 +638,7 @@ function renderLinkedin(p) {
   html += `<div class="grid g2">` + funil('Funil do LinkedIn Ads', [
     {tit:'Impressões', val:null, det:'aguardando integração'},
     {tit:'Alcance', val:null, det:'aguardando integração'},
-    {tit:'Cliques', val:null, det:'aguardando integração'},
+    {tit:'Cliques', val:null, det:`aguardando integração · ${wppSite(ga4Midia(p), 'linkedin')}`},
     {tit:'Leads (Lead Gen Forms)', val:null, det:'aguardando integração'},
     {tit:'Contatos no HubSpot (origem LinkedIn pago)', val: h?.porMidia.linkedin ?? null, unid:'contatos'},
     {tit: ETAPA_NEG, val: h?.negMidia.linkedin ?? null, unid:'negócios'},
@@ -676,17 +684,17 @@ function renderHubspot(p, c) {
 }
 
 function renderWhatsapp(p, c) {
-  const m = metaPeriodo(p), mc = c ? metaPeriodo(c) : null, h = hubPeriodo(p), hc = c ? hubPeriodo(c) : null, ga = ga4Periodo(p);
+  const m = metaPeriodo(p), mc = c ? metaPeriodo(c) : null, h = hubPeriodo(p), hc = c ? hubPeriodo(c) : null, ga = ga4Periodo(p), gm = ga4Midia(p);
   const negW = h ? (h.negCanal.WhatsApp || 0) : null, sqlW = h ? (h.sqlCanal.WhatsApp || 0) : null;
   let html = `<div class="grid g4">
     ${kpi({rot:'Conversas iniciadas (Meta)', cor:'var(--meta)', valor: m?.conversas, classe:'destaque', sub: m ? delta(m.conversas, mc?.conversas) : 'pendente'})}
     ${kpi({rot:'Contatos no HubSpot (WhatsApp)', cor:'var(--hub)', valor: h?.wpp, sub: h ? delta(h.wpp, hc?.wpp) : 'pendente'})}
     ${kpi({rot:'SQL vindos do WhatsApp', cor:'var(--yellow)', valor: sqlW, sub: h ? delta(sqlW, hc?.sqlCanal.WhatsApp) : ''})}
-    ${kpi({rot:'Cliques no botão do site (GA4)', cor:'var(--wpp)', valor: ga, sub: ga == null ? 'integração pendente' : ''})}
+    ${kpi({rot:'Cliques no botão do site (GA4)', cor:'var(--wpp)', valor: ga, sub: ga == null ? 'integração pendente' : (gm ? `Meta ${int(gm.meta)} · Google ${int(gm.google)} · LinkedIn ${int(gm.linkedin)}` : '')})}
   </div>`;
   const wppCamp = m ? m.campanhas.filter(k => k.conversas > 0).sort((a, b) => b.conversas - a.conversas) : [];
   html += `<div class="grid g21">` + funil('Funil do WhatsApp', [
-    {tit:'Cliques no botão de WhatsApp do site', val: ga, det: ga == null ? 'GA4 pendente (ver Integrações)' : 'GA4 · intenção, sem garantia de mensagem'},
+    {tit:'Cliques no botão de WhatsApp do site', val: ga, det: ga == null ? 'GA4 pendente (ver Integrações)' : (gm ? `Meta ${int(gm.meta)} · Google ${int(gm.google)} · LinkedIn ${int(gm.linkedin)} · outras origens ${int(gm.outras)} · GA4, intenção sem garantia de mensagem` : 'GA4 · intenção, sem garantia de mensagem')},
     {tit:'Conversas iniciadas pelos anúncios', val: m?.conversas ?? null, unid:'conversas', det:'Meta · pessoas que mandaram mensagem a partir do anúncio'},
     {tit:'Contatos criados no HubSpot', val: h?.wpp ?? null, unid:'contatos', det: h ? `canal WhatsApp ou mensagem do GC · ${ordenar(h.gc).map(([k, v]) => `${k} ${int(v)}`).join(' · ') || 'sem mensagem do GC'}` : ''},
     {tit: ETAPA_NEG, val: negW, unid:'negócios', det:'canal de entrada WhatsApp'},

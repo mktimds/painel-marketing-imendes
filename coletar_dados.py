@@ -69,7 +69,10 @@ FONTES_HUBSPOT = {  # hs_analytics_source (Original Traffic Source)
 }
 
 GA4_PROPRIEDADE = os.environ.get("GA4_PROPERTY_ID", "405901108")
-GA4_EVENTO_WHATSAPP = os.environ.get("GA4_EVENTO_WHATSAPP", "clique_whatsapp")
+# Evento do Site Kit em cliques em links de contato; link_type diz o tipo (whatsapp, phone, email…).
+# A dimensão personalizada "Link Type" (link_type, escopo evento) já existe na propriedade desde 08/2025.
+GA4_EVENTO_WHATSAPP = os.environ.get("GA4_EVENTO_WHATSAPP", "contact_link_click")
+GA4_TIPO_WHATSAPP = os.environ.get("GA4_TIPO_WHATSAPP", "whatsapp")
 GADS_API_VERSION = os.environ.get("GADS_API_VERSION", "v21")
 
 
@@ -415,19 +418,37 @@ def coletar_ga4(hist):
     corpo = {
         "dateRanges": [{"startDate": hist[0].isoformat(), "endDate": hist[1].isoformat()}],
         "metrics": [{"name": "eventCount"}],
-        "dimensions": [{"name": "date"}],
-        "dimensionFilter": {"filter": {"fieldName": "eventName", "stringFilter": {"value": GA4_EVENTO_WHATSAPP}}},
-        "limit": 1000,
+        "dimensions": [{"name": "date"}, {"name": "sessionSource"}, {"name": "sessionMedium"}],
+        "dimensionFilter": {"andGroup": {"expressions": [
+            {"filter": {"fieldName": "eventName", "stringFilter": {"value": GA4_EVENTO_WHATSAPP}}},
+            {"filter": {"fieldName": "customEvent:link_type", "stringFilter": {"value": GA4_TIPO_WHATSAPP}}},
+        ]}},
+        "limit": 100000,
     }
     d = http_json(f"https://analyticsdata.googleapis.com/v1beta/properties/{GA4_PROPRIEDADE}:runReport",
                   "POST", corpo, {"Authorization": f"Bearer {cred.token}"})
-    linhas = []
+    soma = {}
     for r in d.get("rows", []):
-        v = r["dimensionValues"][0]["value"]
-        linhas.append([f"{v[:4]}-{v[4:6]}-{v[6:]}", int(num(r["metricValues"][0]["value"]))])
-    linhas.sort()
-    return {"status": "ok", "fonte": f"GA4 {GA4_PROPRIEDADE}, evento {GA4_EVENTO_WHATSAPP}",
-            "diario": {"colunas": ["data", "cliques"], "linhas": linhas}}
+        v, fonte, meio = (x["value"] for x in r["dimensionValues"])
+        chave = (f"{v[:4]}-{v[4:6]}-{v[6:]}", midia_ga4(fonte, meio))
+        soma[chave] = soma.get(chave, 0) + int(num(r["metricValues"][0]["value"]))
+    linhas = sorted([d_, m_, q] for (d_, m_), q in soma.items())
+    return {"status": "ok",
+            "fonte": f"GA4 {GA4_PROPRIEDADE}, evento {GA4_EVENTO_WHATSAPP} com link_type = {GA4_TIPO_WHATSAPP}",
+            "diario": {"colunas": ["data", "midia", "cliques"], "linhas": linhas}}
+
+
+def midia_ga4(fonte, meio):
+    """Mídia paga pela origem/mídia da sessão (UTMs do gerador-utm.html ou gclid). Sem mídia paga → 'outras'."""
+    f, m = (fonte or "").lower(), (meio or "").lower()
+    pago = m in ("cpc", "ppc", "paid", "paid_social", "paidsocial", "paid-social") or "paid" in m or m.endswith("ads")
+    if f == "google" and m == "cpc":
+        return "google"
+    if pago and any(x in f for x in ("facebook", "instagram", "meta")) or (pago and f in ("fb", "ig", "an", "msg")):
+        return "meta"
+    if pago and "linkedin" in f:
+        return "linkedin"
+    return "outras"
 
 
 # --------------------------------------------------------------------------- principal

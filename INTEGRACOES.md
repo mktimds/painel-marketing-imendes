@@ -20,7 +20,7 @@ Nenhum token fica no HTML: os tokens ficam só nos *Secrets* do GitHub.
 | Meta Ads | ✅ funcionando (testado) | Só cadastrar o segredo `META_ACCESS_TOKEN` no GitHub |
 | HubSpot | ✅ funcionando (testado) | Cadastrar `HUBSPOT_TOKEN` (de preferência um app privado só de leitura) |
 | Google Ads | ⚠️ cópia manual do Reportei (13/11, 9h20) | Configurar a Google Ads API (passo 3) |
-| GA4 (cliques no WhatsApp) | ⏳ pendente | Conta de serviço (passo 4) e confirmar o nome do evento |
+| GA4 (cliques no WhatsApp) | ✅ funcionando (18/11/2026) | Conta de serviço painel-ga4@painel-marketing-imendes.iam.gserviceaccount.com como Leitor |
 | LinkedIn Ads | ⏳ sem números | Conta com campanhas + app aprovado (passo 5) |
 
 ---
@@ -75,7 +75,7 @@ Conta 759-129-6003 (acesso com o login que já administra a conta).
 2. Crie uma **conta de serviço** e gere uma chave **JSON**.
 3. No GA4 (propriedade 405901108): Administrador → Gerenciamento de acesso → adicione o e-mail da conta de serviço como **Leitor**.
 4. Segredo `GA4_SERVICE_ACCOUNT_JSON` = o conteúdo inteiro do arquivo JSON.
-5. **Confirmar o nome do evento.** O script conta o evento `clique_whatsapp`. Nas LPs ele vai para o `dataLayer`; não confirmei se chega ao GA4 com esse nome (o GA4 do site vem do Site Kit, não do GTM). Se o nome for outro, crie a variável `GA4_EVENTO_WHATSAPP`.
+5. **Evento usado:** `contact_link_click` (enviado pelo Site Kit em cliques em links de contato) filtrado por `link_type = whatsapp`. A dimensão personalizada *Link Type* (`link_type`) já existe na propriedade desde 08/2025. Os cliques são separados por mídia pela origem/mídia da sessão: `google / cpc` = Google; `facebook`/`instagram` com mídia paga = Meta; `linkedin` com mídia paga = LinkedIn; o resto = outras origens. Para a mídia ser reconhecida, use os links do **gerador-utm.html** nas campanhas. Para trocar o evento ou o tipo, crie as variáveis `GA4_EVENTO_WHATSAPP` e `GA4_TIPO_WHATSAPP`.
 
 ## 5. LinkedIn Ads
 
