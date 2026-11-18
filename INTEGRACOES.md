@@ -19,7 +19,7 @@ Nenhum token fica no HTML: os tokens ficam só nos *Secrets* do GitHub.
 |---|---|---|
 | Meta Ads | ✅ funcionando (testado) | Só cadastrar o segredo `META_ACCESS_TOKEN` no GitHub |
 | HubSpot | ✅ funcionando (testado) | Cadastrar `HUBSPOT_TOKEN` (de preferência um app privado só de leitura) |
-| Google Ads | ⏳ aguardando acesso Exploração e refresh token | Passo 3 |
+| Google Ads | ⏳ acesso Exploração aprovado; falta o refresh token | Passo 3 |
 | GA4 (cliques no WhatsApp) | ✅ funcionando (18/11/2026) | Conta de serviço painel-ga4@painel-marketing-imendes.iam.gserviceaccount.com como Leitor |
 | LinkedIn Ads | ⏳ sem números | Conta com campanhas + app aprovado (passo 5) |
 
@@ -59,7 +59,7 @@ Conta 759-129-6003 (acesso com o login que já administra a conta).
 **Desde 09/09/2026 o Google não usa mais developer token**: o nível de acesso à API é do projeto do Google Cloud.
 
 1. **Projeto `painel-marketing-imendes`** (o mesmo do GA4): Google Ads API ativada, tela de consentimento publicada ("Em produção") e cliente OAuth do tipo *Aplicativo da Web* com o redirecionamento `https://developers.google.com/oauthplayground` — feito em 18/11/2026.
-2. **Nível de acesso**: em console.cloud.google.com → Google Ads API → *Níveis de acesso → Gerenciar*. Ao ativar, o projeto fica em **Teste** (só contas de teste). O nível **Exploração** (até 2.880 operações/dia em contas reais) foi pedido em 18/11/2026; a análise costuma ser automática. O painel usa poucas operações por execução.
+2. **Nível de acesso**: em console.cloud.google.com → Google Ads API → *Níveis de acesso → Gerenciar*. Ao ativar, o projeto fica em **Teste** (só contas de teste). O nível **Exploração** (até 2.880 operações/dia em contas reais) foi pedido e aprovado em 18/11/2026. O painel usa poucas operações por execução.
 3. **Refresh token**: no OAuth Playground (developers.google.com/oauthplayground), engrenagem → "Use your own OAuth credentials" com o Client ID/secret, escopo `https://www.googleapis.com/auth/adwords`, autorize com o login da conta e troque o código pelo *refresh token*.
 4. Segredos no GitHub:
    - `GADS_CLIENT_ID`, `GADS_CLIENT_SECRET`, `GADS_REFRESH_TOKEN`
