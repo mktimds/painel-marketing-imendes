@@ -61,4 +61,4 @@ jobs:
           echo "Destino: $URL · usuário com ${#USR} caracteres · senha com ${#PAS} caracteres"
           curl -sS --fail --ftp-create-dirs --ssl-reqd --user "$USR:$PAS" -T dados.json "$URL"
           # Páginas fixas da pasta (vão junto, para ficarem sempre iguais às do repositório)
-          curl -sS --fail --ssl-reqd --user "$USR:$PAS" -T gerador-utm.html "${URL%/*}/gerador-utm.html"
+          for f in index.html gerador-utm.html; do curl -sS --fail --ssl-reqd --user "$USR:$PAS" -T "$f" "${URL%/*}/$f"; done

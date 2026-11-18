@@ -427,15 +427,20 @@ def coletar_ga4(hist):
     }
     d = http_json(f"https://analyticsdata.googleapis.com/v1beta/properties/{GA4_PROPRIEDADE}:runReport",
                   "POST", corpo, {"Authorization": f"Bearer {cred.token}"})
-    soma = {}
+    soma, origens = {}, {}
     for r in d.get("rows", []):
         v, fonte, meio = (x["value"] for x in r["dimensionValues"])
+        q = int(num(r["metricValues"][0]["value"]))
         chave = (f"{v[:4]}-{v[4:6]}-{v[6:]}", midia_ga4(fonte, meio))
-        soma[chave] = soma.get(chave, 0) + int(num(r["metricValues"][0]["value"]))
+        soma[chave] = soma.get(chave, 0) + q
+        orig = (chave[0], f"{fonte} / {meio}")
+        origens[orig] = origens.get(orig, 0) + q
     linhas = sorted([d_, m_, q] for (d_, m_), q in soma.items())
     return {"status": "ok",
             "fonte": f"GA4 {GA4_PROPRIEDADE}, evento {GA4_EVENTO_WHATSAPP} com link_type = {GA4_TIPO_WHATSAPP}",
-            "diario": {"colunas": ["data", "midia", "cliques"], "linhas": linhas}}
+            "diario": {"colunas": ["data", "midia", "cliques"], "linhas": linhas},
+            "origens_diario": {"colunas": ["data", "origem", "cliques"],
+                               "linhas": sorted([d_, o_, q] for (d_, o_), q in origens.items())}}
 
 
 def midia_ga4(fonte, meio):
