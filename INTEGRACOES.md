@@ -58,7 +58,7 @@ Os leads de pixel de **03 e 04/11/2026** são descontados: nesses dias o snippet
 Conta 759-129-6003 (acesso com o login que já administra a conta).
 
 1. **Developer token**: precisa de uma *conta de administrador (MCC)*. Em ads.google.com, crie uma MCC (grátis) e vincule a conta 759-129-6003 a ela. Na MCC: Ferramentas → **Central de API** → preencha o formulário. O token sai com acesso de teste; peça o **acesso Básico** (o Google analisa em alguns dias úteis). Com acesso de teste a API só lê contas de teste.
-2. **Google Cloud**: em console.cloud.google.com, crie um projeto, ative a **Google Ads API** e crie uma credencial **OAuth (app para computador)**. Guarde *Client ID* e *Client secret*.
+2. **Google Cloud**: em console.cloud.google.com, crie um projeto, ative a **Google Ads API** e configure a *Tela de consentimento OAuth* (tipo Externo) e **publique o app (Em produção)**, senão o refresh token expira em 7 dias. Depois crie uma credencial **OAuth do tipo Aplicativo da Web** com o URI de redirecionamento `https://developers.google.com/oauthplayground`. Guarde *Client ID* e *Client secret*. (Pode usar o mesmo projeto do GA4: `painel-marketing-imendes`.)
 3. **Refresh token**: no OAuth Playground (developers.google.com/oauthplayground), engrenagem → "Use your own OAuth credentials" com o Client ID/secret, escopo `https://www.googleapis.com/auth/adwords`, autorize com o login da conta e troque o código pelo *refresh token*.
 4. Segredos no GitHub:
    - `GADS_DEVELOPER_TOKEN`, `GADS_CLIENT_ID`, `GADS_CLIENT_SECRET`, `GADS_REFRESH_TOKEN`
