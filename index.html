@@ -405,6 +405,23 @@ function ga4Origens(p) {
   const g = DADOS.ga4; if (!vivo(g) || !g.origens_diario) return [];
   return ordenar(Object.fromEntries(Object.entries(somar(g.origens_diario, p, ['cliques'], 'origem').grupos).map(([k, v]) => [k, v.cliques])));
 }
+// Agrupa "origem / mídia" do GA4 em nomes legíveis (mídia paga com a mesma regra do coletar_dados.py)
+function grupoOrigem(om) {
+  const [f, m] = om.toLowerCase().split(' / ');
+  const pago = ['cpc','ppc','paid','paid_social','paidsocial','paid-social'].includes(m) || m.includes('paid') || m.endsWith('ads');
+  if (f === 'google' && m === 'cpc') return 'Google Ads';
+  if (pago && (/facebook|instagram|meta/.test(f) || ['fb','ig','an','msg'].includes(f))) return 'Meta Ads';
+  if (pago && f.includes('linkedin')) return 'LinkedIn Ads';
+  if (m === 'organic') return f === 'google' ? 'Google orgânico' : 'Outros buscadores (Bing, Yahoo…)';
+  if (f === '(direct)') return 'Acesso direto (sem origem)';
+  if (/^(ig|instagram|fb|facebook)$|facebook\.com|instagram\.com/.test(f)) return 'Instagram/Facebook sem anúncio identificado';
+  if (m === 'email') return 'E-mail marketing';
+  if (m === 'ai-assistant' || /chatgpt|perplexity|gemini|copilot/.test(f)) return 'Assistentes de IA (ChatGPT…)';
+  if (m === 'qrcode') return 'QR code';
+  if (m === 'referral') return 'Outros sites';
+  return 'Outras';
+}
+function ga4Grupos(p) { const o = {}; for (const [k, v] of ga4Origens(p)) { const g = grupoOrigem(k); o[g] = (o[g] || 0) + v; } return ordenar(o); }
 const wppSite = (gm, k) => gm ? `Cliques no WhatsApp do site vindos daqui: ${int(gm[k])} (GA4)` : 'Cliques no WhatsApp do site: GA4 pendente';
 
 /* ---------- componentes ---------- */
@@ -694,11 +711,11 @@ function renderWhatsapp(p, c) {
     ${kpi({rot:'Conversas iniciadas (Meta)', cor:'var(--meta)', valor: m?.conversas, classe:'destaque', sub: m ? delta(m.conversas, mc?.conversas) : 'pendente'})}
     ${kpi({rot:'Contatos no HubSpot (WhatsApp)', cor:'var(--hub)', valor: h?.wpp, sub: h ? delta(h.wpp, hc?.wpp) : 'pendente'})}
     ${kpi({rot:'SQL vindos do WhatsApp', cor:'var(--yellow)', valor: sqlW, sub: h ? delta(sqlW, hc?.sqlCanal.WhatsApp) : ''})}
-    ${kpi({rot:'Cliques no botão do site (GA4)', cor:'var(--wpp)', valor: ga, sub: ga == null ? 'integração pendente' : (gm ? `Meta ${int(gm.meta)} · Google ${int(gm.google)} · LinkedIn ${int(gm.linkedin)}` : '')})}
+    ${kpi({rot:'Cliques no botão do site (GA4)', cor:'var(--wpp)', valor: ga, sub: ga == null ? 'integração pendente' : (gm ? `${int(gm.meta + gm.google + gm.linkedin)} de anúncios · ${int(gm.outras)} de outras origens` : '')})}
   </div>`;
   const wppCamp = m ? m.campanhas.filter(k => k.conversas > 0).sort((a, b) => b.conversas - a.conversas) : [];
   html += `<div class="grid g21">` + funil('Funil do WhatsApp', [
-    {tit:'Cliques no botão de WhatsApp do site', val: ga, det: ga == null ? 'GA4 pendente (ver Integrações)' : (gm ? `Meta ${int(gm.meta)} · Google ${int(gm.google)} · LinkedIn ${int(gm.linkedin)} · outras origens ${int(gm.outras)} (${ga4Origens(p).slice(0, 3).map(([k, v]) => `${esc(k)} ${int(v)}`).join(', ') || '—'}) · GA4, intenção sem garantia de mensagem` : 'GA4 · intenção, sem garantia de mensagem')},
+    {tit:'Cliques no botão de WhatsApp do site', val: ga, unid:'cliques', det: ga == null ? 'GA4 pendente (ver Integrações)' : (gm ? `Anúncios: Meta ${int(gm.meta)} · Google ${int(gm.google)} · LinkedIn ${int(gm.linkedin)} — origem completa no quadro abaixo` : 'GA4 · intenção de contato')},
     {tit:'Conversas iniciadas pelos anúncios', val: m?.conversas ?? null, unid:'conversas', det:'Meta · pessoas que mandaram mensagem a partir do anúncio'},
     {tit:'Contatos criados no HubSpot', val: h?.wpp ?? null, unid:'contatos', det: h ? `canal WhatsApp ou mensagem do GC · ${ordenar(h.gc).map(([k, v]) => `${k} ${int(v)}`).join(' · ') || 'sem mensagem do GC'}` : ''},
     {tit: ETAPA_NEG, val: negW, unid:'negócios', det:'canal de entrada WhatsApp'},
@@ -707,7 +724,17 @@ function renderWhatsapp(p, c) {
   + `<div class="card"><h2>Campanhas Meta que geraram conversas</h2><div class="rolagem"><table class="tabela"><thead><tr><th>Campanha</th><th>Invest.</th><th>Conversas</th><th>Custo/conversa*</th></tr></thead><tbody>
       ${wppCamp.map(k => `<tr><td><span class="nome" title="${esc(k.nome)}" style="max-width:200px">${esc(k.nome)}</span></td><td>${brl(k.investimento)}</td><td><b>${int(k.conversas)}</b></td><td>${brl(div(k.investimento, k.conversas))}</td></tr>`).join('') || '<tr><td colspan="4">Sem conversas no período</td></tr>'}
     </tbody></table></div><div style="margin-top:10px;font-size:11px;color:var(--subtle)">* investimento total da campanha ÷ conversas; campanhas com outros objetivos também geram conversas.</div></div></div>`;
-  return {html};
+  if (ga != null) html += `<div class="grid g2">
+    <div class="card"><h2>De onde vêm os cliques no WhatsApp do site <span class="tag">GA4 · ${int(ga)} cliques</span></h2>${rankSimples(ga4Grupos(p))}
+      <div style="margin-top:12px;font-size:11px;color:var(--subtle)">Origem da visita em que a pessoa clicou no botão. Anúncios só aparecem como Meta/Google/LinkedIn Ads quando o link tem as UTMs do gerador (o Google Ads também pelo auto-tagging). Clique é intenção: não garante que a mensagem foi enviada.</div></div>
+    <div class="card"><h2>Cliques no WhatsApp do site por dia</h2><div class="chart-box"><canvas id="c-wpp-site"></canvas></div></div>
+  </div>`;
+  return {html, depois() {
+    if (ga == null) return;
+    const d = dias(p);
+    grafico('c-wpp-site', {type:'bar', data:{labels: d.map(dBR), datasets:[{label:'Cliques', data: porDia(DADOS.ga4.diario, p, 'cliques'), backgroundColor: gradiente('c-wpp-site','#39a770'), borderColor:'#39a770', borderWidth:1, borderRadius:6}]},
+      options:{maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{display:false}, ticks:{maxTicksLimit:12}}, y:{ticks:{precision:0}}}}});
+  }};
 }
 
 function renderFontes() {
