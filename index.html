@@ -715,12 +715,11 @@ function renderWhatsapp(p, c) {
   </div>`;
   const wppCamp = m ? m.campanhas.filter(k => k.conversas > 0).sort((a, b) => b.conversas - a.conversas) : [];
   html += `<div class="grid g21">` + funil('Funil do WhatsApp', [
-    {tit:'Cliques no botão de WhatsApp do site', val: ga, unid:'cliques', det: ga == null ? 'GA4 pendente (ver Integrações)' : (gm ? `Só quem entrou no site e clicou no botão. De visitas de anúncios: Meta ${int(gm.meta)} · Google ${int(gm.google)} · LinkedIn ${int(gm.linkedin)}. O WhatsApp aberto direto do anúncio está na etapa abaixo` : 'GA4 · intenção de contato')},
     {tit:'Conversas iniciadas pelos anúncios', val: m?.conversas ?? null, unid:'conversas', det:'Meta · anúncio que abre o WhatsApp direto, sem passar pelo site'},
     {tit:'Contatos criados no HubSpot', val: h?.wpp ?? null, unid:'contatos', det: h ? `canal WhatsApp ou mensagem do GC · ${ordenar(h.gc).map(([k, v]) => `${k} ${int(v)}`).join(' · ') || 'sem mensagem do GC'}` : ''},
     {tit: ETAPA_NEG, val: negW, unid:'negócios', det:'canal de entrada WhatsApp'},
     {tit: ETAPA_SQL, val: sqlW, unid:'SQL', det:'mãos levantadas com canal de entrada WhatsApp'},
-  ], 'As etapas vêm de fontes diferentes (GA4, Meta e HubSpot) e não são um caminho único da mesma pessoa; a porcentagem é só uma referência de proporção.')
+  ], 'Conversas vêm do Meta; contatos, negócios e SQL vêm do HubSpot (canal WhatsApp, que inclui também quem chamou sem anúncio). Não é o caminho rastreado da mesma pessoa: a porcentagem é uma referência de proporção. Os cliques no botão do site estão no quadro abaixo.')
   + `<div class="card"><h2>Campanhas Meta que geraram conversas</h2><div class="rolagem"><table class="tabela"><thead><tr><th>Campanha</th><th>Invest.</th><th>Conversas</th><th>Custo/conversa*</th></tr></thead><tbody>
       ${wppCamp.map(k => `<tr><td><span class="nome" title="${esc(k.nome)}" style="max-width:200px">${esc(k.nome)}</span></td><td>${brl(k.investimento)}</td><td><b>${int(k.conversas)}</b></td><td>${brl(div(k.investimento, k.conversas))}</td></tr>`).join('') || '<tr><td colspan="4">Sem conversas no período</td></tr>'}
     </tbody></table></div><div style="margin-top:10px;font-size:11px;color:var(--subtle)">* investimento total da campanha ÷ conversas; campanhas com outros objetivos também geram conversas.</div></div></div>`;
