@@ -19,7 +19,7 @@ Nenhum token fica no HTML: os tokens ficam só nos *Secrets* do GitHub.
 |---|---|---|
 | Meta Ads | ✅ funcionando (testado) | Só cadastrar o segredo `META_ACCESS_TOKEN` no GitHub |
 | HubSpot | ✅ funcionando (testado) | Cadastrar `HUBSPOT_TOKEN` (de preferência um app privado só de leitura) |
-| Google Ads | ⚠️ cópia manual do Reportei (13/11, 9h20) | Configurar a Google Ads API (passo 3) |
+| Google Ads | ⏳ aguardando acesso Exploração e refresh token | Passo 3 |
 | GA4 (cliques no WhatsApp) | ✅ funcionando (18/11/2026) | Conta de serviço painel-ga4@painel-marketing-imendes.iam.gserviceaccount.com como Leitor |
 | LinkedIn Ads | ⏳ sem números | Conta com campanhas + app aprovado (passo 5) |
 
@@ -56,18 +56,17 @@ Os leads de pixel de **03 e 04/11/2026** são descontados: nesses dias o snippet
 ## 3. Google Ads (para sair da cópia manual)
 
 Conta 759-129-6003 (acesso com o login que já administra a conta).
+**Desde 09/09/2026 o Google não usa mais developer token**: o nível de acesso à API é do projeto do Google Cloud.
 
-1. **Developer token**: precisa de uma *conta de administrador (MCC)*. Em ads.google.com, crie uma MCC (grátis) e vincule a conta 759-129-6003 a ela. Na MCC: Ferramentas → **Central de API** → preencha o formulário. O token sai com acesso de teste; peça o **acesso Básico** (o Google analisa em alguns dias úteis). Com acesso de teste a API só lê contas de teste.
-2. **Google Cloud**: em console.cloud.google.com, crie um projeto, ative a **Google Ads API** e configure a *Tela de consentimento OAuth* (tipo Externo) e **publique o app (Em produção)**, senão o refresh token expira em 7 dias. Depois crie uma credencial **OAuth do tipo Aplicativo da Web** com o URI de redirecionamento `https://developers.google.com/oauthplayground`. Guarde *Client ID* e *Client secret*. (Pode usar o mesmo projeto do GA4: `painel-marketing-imendes`.)
+1. **Projeto `painel-marketing-imendes`** (o mesmo do GA4): Google Ads API ativada, tela de consentimento publicada ("Em produção") e cliente OAuth do tipo *Aplicativo da Web* com o redirecionamento `https://developers.google.com/oauthplayground` — feito em 18/11/2026.
+2. **Nível de acesso**: em console.cloud.google.com → Google Ads API → *Níveis de acesso → Gerenciar*. Ao ativar, o projeto fica em **Teste** (só contas de teste). O nível **Exploração** (até 2.880 operações/dia em contas reais) foi pedido em 18/11/2026; a análise costuma ser automática. O painel usa poucas operações por execução.
 3. **Refresh token**: no OAuth Playground (developers.google.com/oauthplayground), engrenagem → "Use your own OAuth credentials" com o Client ID/secret, escopo `https://www.googleapis.com/auth/adwords`, autorize com o login da conta e troque o código pelo *refresh token*.
 4. Segredos no GitHub:
-   - `GADS_DEVELOPER_TOKEN`, `GADS_CLIENT_ID`, `GADS_CLIENT_SECRET`, `GADS_REFRESH_TOKEN`
+   - `GADS_CLIENT_ID`, `GADS_CLIENT_SECRET`, `GADS_REFRESH_TOKEN`
    - `GADS_CUSTOMER_ID` = `7591296003`
-   - `GADS_LOGIN_CUSTOMER_ID` = ID da MCC (sem traços)
+   - `GADS_LOGIN_CUSTOMER_ID` (opcional) = ID da MCC, sem traços — só se o login acessar a conta pela MCC.
 5. Assim que esses segredos existirem, o script ignora a cópia manual e passa a trazer campanhas, palavras-chave, **termos de pesquisa** e investimento por dia.
-   A versão da API está em `GADS_API_VERSION` (padrão `v21`); se o Google desativar essa versão, troque por uma atual.
-
-> Esta parte não pôde ser testada ainda (não há developer token). Na primeira execução, confira a aba Integrações do painel.
+   A versão da API está em `GADS_API_VERSION` (padrão `v26`); se o Google desativar essa versão, troque por uma atual.
 
 ## 4. GA4 — cliques no botão de WhatsApp do site
 

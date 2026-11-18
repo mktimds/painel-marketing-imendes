@@ -11,7 +11,7 @@ status "pendente" e o painel mostra o aviso, sem inventar número):
 
   META_ACCESS_TOKEN                      Meta Ads (Graph API)
   HUBSPOT_TOKEN                          HubSpot (app privado, leitura)
-  GADS_DEVELOPER_TOKEN, GADS_CLIENT_ID,
+  GADS_CLIENT_ID,
   GADS_CLIENT_SECRET, GADS_REFRESH_TOKEN,
   GADS_CUSTOMER_ID [, GADS_LOGIN_CUSTOMER_ID]   Google Ads API
   GA4_SERVICE_ACCOUNT_JSON               GA4 (cliques no WhatsApp do site)
@@ -73,7 +73,9 @@ GA4_PROPRIEDADE = os.environ.get("GA4_PROPERTY_ID", "405901108")
 # A dimensão personalizada "Link Type" (link_type, escopo evento) já existe na propriedade desde 08/2025.
 GA4_EVENTO_WHATSAPP = os.environ.get("GA4_EVENTO_WHATSAPP", "contact_link_click")
 GA4_TIPO_WHATSAPP = os.environ.get("GA4_TIPO_WHATSAPP", "whatsapp")
-GADS_API_VERSION = os.environ.get("GADS_API_VERSION", "v21")
+# Desde 09/09/2026 o Google não usa mais developer token: o nível de acesso é do projeto do Google Cloud
+# (painel-marketing-imendes). GADS_DEVELOPER_TOKEN continua aceito só se existir.
+GADS_API_VERSION = os.environ.get("GADS_API_VERSION", "v26")
 
 
 # --------------------------------------------------------------------------- utilidades
@@ -356,7 +358,9 @@ def gads_token():
 
 def gads_query(acesso, gaql):
     cid = os.environ["GADS_CUSTOMER_ID"].replace("-", "")
-    headers = {"Authorization": f"Bearer {acesso}", "developer-token": os.environ["GADS_DEVELOPER_TOKEN"]}
+    headers = {"Authorization": f"Bearer {acesso}"}
+    if os.environ.get("GADS_DEVELOPER_TOKEN"):
+        headers["developer-token"] = os.environ["GADS_DEVELOPER_TOKEN"]
     if os.environ.get("GADS_LOGIN_CUSTOMER_ID"):
         headers["login-customer-id"] = os.environ["GADS_LOGIN_CUSTOMER_ID"].replace("-", "")
     url = f"https://googleads.googleapis.com/{GADS_API_VERSION}/customers/{cid}/googleAds:search"
@@ -513,7 +517,7 @@ def main():
     saida["hubspot"] = (rodar("HubSpot", coletar_hubspot, env["HUBSPOT_TOKEN"], hist)
                         if env.get("HUBSPOT_TOKEN") else bloco_pendente("Falta HUBSPOT_TOKEN"))
 
-    faltando = [v for v in ("GADS_DEVELOPER_TOKEN", "GADS_CLIENT_ID", "GADS_CLIENT_SECRET",
+    faltando = [v for v in ("GADS_CLIENT_ID", "GADS_CLIENT_SECRET",
                             "GADS_REFRESH_TOKEN", "GADS_CUSTOMER_ID") if not env.get(v)]
     snapshot = os.path.join(os.path.dirname(os.path.abspath(__file__)), "google_ads_snapshot.json")
     if not faltando:
