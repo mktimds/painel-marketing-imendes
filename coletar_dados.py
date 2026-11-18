@@ -494,6 +494,24 @@ def limpar_segredos():
         os.environ[nome] = v
 
 
+# Intervalo mínimo entre coletas do Meta (o painel roda a cada 10 min; o Meta bloqueia o app se for chamado demais).
+META_INTERVALO_MIN = int(os.environ.get("META_INTERVALO_MIN", "60"))
+
+
+def reaproveitar(anterior, canal, agora, minutos):
+    """Bloco anterior do canal, se for bom, de hoje e mais novo que `minutos`; senão None."""
+    b = anterior.get(canal) if anterior.get("versao") == 2 else None
+    if not b or b.get("status") != "ok" or b.get("desatualizado") or not b.get("coletado_em"):
+        return None
+    try:
+        quando = dt.datetime.fromisoformat(b["coletado_em"])
+    except ValueError:
+        return None
+    if quando.date() != agora.date() or (agora - quando).total_seconds() > minutos * 60:
+        return None
+    return b
+
+
 def main():
     limpar_segredos()
     ap = argparse.ArgumentParser()
@@ -519,8 +537,16 @@ def main():
         "presets": {k: faixa(v) for k, v in pres.items()},
     }
     env = os.environ
-    saida["meta"] = (rodar("Meta Ads", coletar_meta, env["META_ACCESS_TOKEN"], hist, pres)
-                     if env.get("META_ACCESS_TOKEN") else bloco_pendente("Falta META_ACCESS_TOKEN"))
+    reaproveitados = set()
+    meta_velho = reaproveitar(anterior, "meta", agora, META_INTERVALO_MIN)
+    if meta_velho:
+        # O Meta limita chamadas por hora: entre uma coleta e outra, repete o bloco anterior.
+        saida["meta"] = meta_velho
+        reaproveitados.add("meta")
+        print(f"→ Meta Ads: reaproveitado (coletado há menos de {META_INTERVALO_MIN} min)", file=sys.stderr)
+    else:
+        saida["meta"] = (rodar("Meta Ads", coletar_meta, env["META_ACCESS_TOKEN"], hist, pres)
+                         if env.get("META_ACCESS_TOKEN") else bloco_pendente("Falta META_ACCESS_TOKEN"))
     saida["hubspot"] = (rodar("HubSpot", coletar_hubspot, env["HUBSPOT_TOKEN"], hist)
                         if env.get("HUBSPOT_TOKEN") else bloco_pendente("Falta HUBSPOT_TOKEN"))
 
@@ -550,7 +576,7 @@ def main():
             velho["desatualizado"] = True
             velho["erro_atual"] = saida[canal]["motivo"]
             saida[canal] = velho
-        elif saida[canal].get("status") == "ok":
+        elif saida[canal].get("status") == "ok" and canal not in reaproveitados:
             saida[canal]["coletado_em"] = saida["gerado_em"]
 
     tmp = args.saida + ".tmp"
