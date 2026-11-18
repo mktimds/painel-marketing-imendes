@@ -711,12 +711,12 @@ function renderWhatsapp(p, c) {
     ${kpi({rot:'Conversas iniciadas (Meta)', cor:'var(--meta)', valor: m?.conversas, classe:'destaque', sub: m ? delta(m.conversas, mc?.conversas) : 'pendente'})}
     ${kpi({rot:'Contatos no HubSpot (WhatsApp)', cor:'var(--hub)', valor: h?.wpp, sub: h ? delta(h.wpp, hc?.wpp) : 'pendente'})}
     ${kpi({rot:'SQL vindos do WhatsApp', cor:'var(--yellow)', valor: sqlW, sub: h ? delta(sqlW, hc?.sqlCanal.WhatsApp) : ''})}
-    ${kpi({rot:'Cliques no botão do site (GA4)', cor:'var(--wpp)', valor: ga, sub: ga == null ? 'integração pendente' : (gm ? `${int(gm.meta + gm.google + gm.linkedin)} de anúncios · ${int(gm.outras)} de outras origens` : '')})}
+    ${kpi({rot:'Cliques no botão do site (GA4)', cor:'var(--wpp)', valor: ga, sub: ga == null ? 'integração pendente' : (gm ? `${int(gm.meta + gm.google + gm.linkedin)} de visitas de anúncios · ${int(gm.outras)} de outras origens` : '')})}
   </div>`;
   const wppCamp = m ? m.campanhas.filter(k => k.conversas > 0).sort((a, b) => b.conversas - a.conversas) : [];
   html += `<div class="grid g21">` + funil('Funil do WhatsApp', [
-    {tit:'Cliques no botão de WhatsApp do site', val: ga, unid:'cliques', det: ga == null ? 'GA4 pendente (ver Integrações)' : (gm ? `Anúncios: Meta ${int(gm.meta)} · Google ${int(gm.google)} · LinkedIn ${int(gm.linkedin)} — origem completa no quadro abaixo` : 'GA4 · intenção de contato')},
-    {tit:'Conversas iniciadas pelos anúncios', val: m?.conversas ?? null, unid:'conversas', det:'Meta · pessoas que mandaram mensagem a partir do anúncio'},
+    {tit:'Cliques no botão de WhatsApp do site', val: ga, unid:'cliques', det: ga == null ? 'GA4 pendente (ver Integrações)' : (gm ? `Só quem entrou no site e clicou no botão. De visitas de anúncios: Meta ${int(gm.meta)} · Google ${int(gm.google)} · LinkedIn ${int(gm.linkedin)}. O WhatsApp aberto direto do anúncio está na etapa abaixo` : 'GA4 · intenção de contato')},
+    {tit:'Conversas iniciadas pelos anúncios', val: m?.conversas ?? null, unid:'conversas', det:'Meta · anúncio que abre o WhatsApp direto, sem passar pelo site'},
     {tit:'Contatos criados no HubSpot', val: h?.wpp ?? null, unid:'contatos', det: h ? `canal WhatsApp ou mensagem do GC · ${ordenar(h.gc).map(([k, v]) => `${k} ${int(v)}`).join(' · ') || 'sem mensagem do GC'}` : ''},
     {tit: ETAPA_NEG, val: negW, unid:'negócios', det:'canal de entrada WhatsApp'},
     {tit: ETAPA_SQL, val: sqlW, unid:'SQL', det:'mãos levantadas com canal de entrada WhatsApp'},
