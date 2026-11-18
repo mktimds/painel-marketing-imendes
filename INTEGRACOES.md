@@ -19,7 +19,7 @@ Nenhum token fica no HTML: os tokens ficam só nos *Secrets* do GitHub.
 |---|---|---|
 | Meta Ads | ✅ funcionando (testado) | Só cadastrar o segredo `META_ACCESS_TOKEN` no GitHub |
 | HubSpot | ✅ funcionando (testado) | Cadastrar `HUBSPOT_TOKEN` (de preferência um app privado só de leitura) |
-| Google Ads | ⏳ acesso Exploração aprovado; falta o refresh token | Passo 3 |
+| Google Ads | ✅ funcionando (18/11/2026) | Para refazer o token: `python3 hospedagem/gerar-token-google-ads.py` |
 | GA4 (cliques no WhatsApp) | ✅ funcionando (18/11/2026) | Conta de serviço painel-ga4@painel-marketing-imendes.iam.gserviceaccount.com como Leitor |
 | LinkedIn Ads | ⏳ sem números | Conta com campanhas + app aprovado (passo 5) |
 
