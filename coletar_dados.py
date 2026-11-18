@@ -76,6 +76,7 @@ GA4_TIPO_WHATSAPP = os.environ.get("GA4_TIPO_WHATSAPP", "whatsapp")
 # Desde 09/09/2026 o Google não usa mais developer token: o nível de acesso é do projeto do Google Cloud
 # (painel-marketing-imendes). GADS_DEVELOPER_TOKEN continua aceito só se existir.
 GADS_API_VERSION = os.environ.get("GADS_API_VERSION", "v26")
+GADS_CONTA_PADRAO = "7591296003"  # conta iMendes 759-129-6003 (não é segredo)
 
 
 # --------------------------------------------------------------------------- utilidades
@@ -357,7 +358,7 @@ def gads_token():
 
 
 def gads_query(acesso, gaql):
-    cid = os.environ["GADS_CUSTOMER_ID"].replace("-", "")
+    cid = os.environ.get("GADS_CUSTOMER_ID", GADS_CONTA_PADRAO).replace("-", "")
     headers = {"Authorization": f"Bearer {acesso}"}
     if os.environ.get("GADS_DEVELOPER_TOKEN"):
         headers["developer-token"] = os.environ["GADS_DEVELOPER_TOKEN"]
@@ -518,7 +519,7 @@ def main():
                         if env.get("HUBSPOT_TOKEN") else bloco_pendente("Falta HUBSPOT_TOKEN"))
 
     faltando = [v for v in ("GADS_CLIENT_ID", "GADS_CLIENT_SECRET",
-                            "GADS_REFRESH_TOKEN", "GADS_CUSTOMER_ID") if not env.get(v)]
+                            "GADS_REFRESH_TOKEN") if not env.get(v)]
     snapshot = os.path.join(os.path.dirname(os.path.abspath(__file__)), "google_ads_snapshot.json")
     if not faltando:
         saida["google_ads"] = rodar("Google Ads", coletar_google_ads, hist)
