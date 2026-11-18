@@ -348,6 +348,12 @@ def coletar_hubspot(token, hist):
 # --------------------------------------------------------------------------- Google Ads
 
 def gads_token():
+    cid = os.environ["GADS_CLIENT_ID"]
+    if not cid.endswith(".apps.googleusercontent.com"):
+        raise RuntimeError(f"GADS_CLIENT_ID não parece um ID de cliente OAuth ({len(cid)} caracteres; "
+                           "deve terminar em .apps.googleusercontent.com)")
+    if not os.environ["GADS_CLIENT_SECRET"].startswith("GOCSPX-"):
+        print("  aviso: GADS_CLIENT_SECRET não começa com GOCSPX-", flush=True)
     d = http_json("https://oauth2.googleapis.com/token", "POST", {
         "client_id": os.environ["GADS_CLIENT_ID"],
         "client_secret": os.environ["GADS_CLIENT_SECRET"],

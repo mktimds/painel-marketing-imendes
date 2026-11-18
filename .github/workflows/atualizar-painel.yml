@@ -27,12 +27,18 @@ jobs:
 
       - name: Baixar o dados.json atual (para manter o último dado bom se um canal falhar)
         env:
-          DASH_JSON_URL: ${{ secrets.DASH_JSON_URL }}
-          DASH_SITE_USER: ${{ secrets.DASH_SITE_USER }}
-          DASH_SITE_PASS: ${{ secrets.DASH_SITE_PASS }}
+          DASH_UPLOAD_URL: ${{ secrets.DASH_UPLOAD_URL }}
+          DASH_UPLOAD_USER: ${{ secrets.DASH_UPLOAD_USER }}
+          DASH_UPLOAD_PASS: ${{ secrets.DASH_UPLOAD_PASS }}
         run: |
-          if [ -n "$DASH_JSON_URL" ]; then
-            curl -sf --user "$DASH_SITE_USER:$DASH_SITE_PASS" "$DASH_JSON_URL" -o dados.json || rm -f dados.json
+          limpa() { v=$(printf '%s' "$2" | tr -d '\r\n' | sed -e "s/^ *//; s/ *$//; s/^$1=//; s/^[\"']//; s/[\"']$//"); printf '%s' "$v"; }
+          URL=$(limpa DASH_UPLOAD_URL "$DASH_UPLOAD_URL")
+          USR=$(limpa DASH_UPLOAD_USER "$DASH_UPLOAD_USER")
+          PAS=$(limpa DASH_UPLOAD_PASS "$DASH_UPLOAD_PASS")
+          if [ -n "$URL" ] && curl -sS --fail --ssl-reqd --user "$USR:$PAS" "$URL" -o dados.json; then
+            echo "dados.json anterior baixado ($(wc -c < dados.json) bytes)"
+          else
+            rm -f dados.json; echo "sem dados.json anterior"
           fi
 
       - name: Coletar dados
