@@ -401,6 +401,10 @@ function ga4Midia(p) {
   for (const [k, v] of Object.entries(r.grupos)) o[k] = (o[k] || 0) + v.cliques;
   return o;
 }
+function ga4Origens(p) {
+  const g = DADOS.ga4; if (!vivo(g) || !g.origens_diario) return [];
+  return ordenar(Object.fromEntries(Object.entries(somar(g.origens_diario, p, ['cliques'], 'origem').grupos).map(([k, v]) => [k, v.cliques])));
+}
 const wppSite = (gm, k) => gm ? `Cliques no WhatsApp do site vindos daqui: ${int(gm[k])} (GA4)` : 'Cliques no WhatsApp do site: GA4 pendente';
 
 /* ---------- componentes ---------- */
@@ -694,7 +698,7 @@ function renderWhatsapp(p, c) {
   </div>`;
   const wppCamp = m ? m.campanhas.filter(k => k.conversas > 0).sort((a, b) => b.conversas - a.conversas) : [];
   html += `<div class="grid g21">` + funil('Funil do WhatsApp', [
-    {tit:'Cliques no botão de WhatsApp do site', val: ga, det: ga == null ? 'GA4 pendente (ver Integrações)' : (gm ? `Meta ${int(gm.meta)} · Google ${int(gm.google)} · LinkedIn ${int(gm.linkedin)} · outras origens ${int(gm.outras)} · GA4, intenção sem garantia de mensagem` : 'GA4 · intenção, sem garantia de mensagem')},
+    {tit:'Cliques no botão de WhatsApp do site', val: ga, det: ga == null ? 'GA4 pendente (ver Integrações)' : (gm ? `Meta ${int(gm.meta)} · Google ${int(gm.google)} · LinkedIn ${int(gm.linkedin)} · outras origens ${int(gm.outras)} (${ga4Origens(p).slice(0, 3).map(([k, v]) => `${esc(k)} ${int(v)}`).join(', ') || '—'}) · GA4, intenção sem garantia de mensagem` : 'GA4 · intenção, sem garantia de mensagem')},
     {tit:'Conversas iniciadas pelos anúncios', val: m?.conversas ?? null, unid:'conversas', det:'Meta · pessoas que mandaram mensagem a partir do anúncio'},
     {tit:'Contatos criados no HubSpot', val: h?.wpp ?? null, unid:'contatos', det: h ? `canal WhatsApp ou mensagem do GC · ${ordenar(h.gc).map(([k, v]) => `${k} ${int(v)}`).join(' · ') || 'sem mensagem do GC'}` : ''},
     {tit: ETAPA_NEG, val: negW, unid:'negócios', det:'canal de entrada WhatsApp'},
