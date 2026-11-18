@@ -364,7 +364,7 @@ def gads_token():
 
 
 def gads_query(acesso, gaql):
-    cid = os.environ.get("GADS_CUSTOMER_ID", GADS_CONTA_PADRAO).replace("-", "")
+    cid = (os.environ.get("GADS_CUSTOMER_ID") or GADS_CONTA_PADRAO).replace("-", "")
     headers = {"Authorization": f"Bearer {acesso}"}
     if os.environ.get("GADS_DEVELOPER_TOKEN"):
         headers["developer-token"] = os.environ["GADS_DEVELOPER_TOKEN"]
