@@ -2,7 +2,7 @@
 """
 Coleta os números do Painel de Marketing IMendes e grava dados.json.
 
-Os dados saem POR DIA (últimos DIAS_HISTORICO dias) para o painel somar qualquer
+Os dados saem POR DIA (últimos DIAS_HISTORICO dias, padrão 2 anos) para o painel somar qualquer
 período escolhido no navegador. O alcance do Meta (pessoas únicas) não pode ser
 somado dia a dia, então é coletado pronto para os períodos fixos (presets).
 
@@ -29,7 +29,9 @@ import urllib.parse
 import urllib.request
 
 FUSO = dt.timezone(dt.timedelta(hours=-3))  # America/Sao_Paulo (sem horário de verão)
-DIAS_HISTORICO = int(os.environ.get("DIAS_HISTORICO", "180"))
+META_BLOCO_DIAS = 90       # tamanho de cada pedido diário ao Meta
+META_DIAS_RECENTES = 7     # nas execuções incrementais, rebusca só estes dias (atribuição muda alguns dias)
+DIAS_HISTORICO = int(os.environ.get("DIAS_HISTORICO", "730"))  # 2 anos (desde 19/11/2026)
 
 META_API = "https://graph.facebook.com/v23.0"
 META_CONTAS = [c.strip() for c in os.environ.get(
@@ -101,7 +103,7 @@ def http_json(url, metodo="GET", corpo=None, headers=None, tentativas=3, form=Fa
                 time.sleep(3 * (i + 1))
                 continue
             raise RuntimeError(f"HTTP {e.code} em {url.split('?')[0]}: {texto[:400]}")
-        except urllib.error.URLError as e:
+        except (urllib.error.URLError, TimeoutError, OSError) as e:  # inclui "read operation timed out"
             if i < tentativas - 1:
                 time.sleep(3 * (i + 1))
                 continue
@@ -128,6 +130,9 @@ def presets(hoje):
         "ult7": (hoje - dt.timedelta(days=6), hoje),
         "ult30": (hoje - dt.timedelta(days=29), hoje),
         "ult90": (hoje - dt.timedelta(days=89), hoje),
+        "ult12m": (hoje - dt.timedelta(days=364), hoje),
+        "ano_atual": (hoje.replace(month=1, day=1), hoje),
+        "ano_anterior": (dt.date(hoje.year - 1, 1, 1), dt.date(hoje.year - 1, 12, 31)),
     }
 
 
@@ -169,23 +174,45 @@ def metricas_meta(l):
             int(a.get(META_LEAD_FORM, 0)), int(site - desc), int(a.get(META_CONVERSA, 0)), int(desc)]
 
 
-def coletar_meta(token, hist, pres):
-    janela = json.dumps({"since": hist[0].isoformat(), "until": hist[1].isoformat()})
+def blocos(inicio, fim, dias=META_BLOCO_DIAS):
+    """Divide [inicio, fim] em janelas de até `dias` (o Meta recusa períodos longos com time_increment=1)."""
+    while inicio <= fim:
+        ate = min(fim, inicio + dt.timedelta(days=dias - 1))
+        yield inicio, ate
+        inicio = ate + dt.timedelta(days=1)
+
+
+def coletar_meta(token, hist, pres, anterior=None):
+    """Busca completa uma vez por dia; nas outras execuções, só os últimos META_DIAS_RECENTES dias,
+    juntando com as linhas antigas do bloco anterior (anterior = bloco 'meta' do dados.json de antes)."""
+    hoje = hist[1]
+    incremental = bool(anterior and anterior.get("status") == "ok" and not anterior.get("desatualizado")
+                       and anterior.get("completo_em") == hoje.isoformat()
+                       and anterior.get("historico_inicio") == hist[0].isoformat())
+    desde = hoje - dt.timedelta(days=META_DIAS_RECENTES - 1) if incremental else hist[0]
     campanhas, anuncios, ativos = [], [], []
-    nomes_campanha = {}
+    nomes_campanha = dict(anterior.get("campanhas_nomes", {})) if incremental else {}
     for conta in META_CONTAS:
-        linhas = meta_get(f"{conta}/insights", token, level="campaign", time_increment=1,
-                          time_range=janela, limit=500,
-                          fields="campaign_id,campaign_name,spend,impressions,actions")
-        if linhas:
+        teve = False
+        for a, b in blocos(desde, hoje):
+            janela = json.dumps({"since": a.isoformat(), "until": b.isoformat()})
+            linhas = meta_get(f"{conta}/insights", token, level="campaign", time_increment=1,
+                              time_range=janela, limit=500,
+                              fields="campaign_id,campaign_name,spend,impressions,actions")
+            teve = teve or bool(linhas)
+            for l in linhas:
+                nomes_campanha[l["campaign_id"]] = l["campaign_name"]
+                campanhas.append([l["date_start"], l["campaign_id"]] + metricas_meta(l))
+            for l in meta_get(f"{conta}/insights", token, level="ad", time_increment=1,
+                              time_range=janela, limit=500,
+                              fields="ad_id,ad_name,campaign_id,spend,impressions,actions"):
+                anuncios.append([l["date_start"], l["ad_id"]] + metricas_meta(l))
+        if teve or (incremental and conta in anterior.get("contas", [])):
             ativos.append(conta)
-        for l in linhas:
-            nomes_campanha[l["campaign_id"]] = l["campaign_name"]
-            campanhas.append([l["date_start"], l["campaign_id"]] + metricas_meta(l))
-        for l in meta_get(f"{conta}/insights", token, level="ad", time_increment=1,
-                          time_range=janela, limit=500,
-                          fields="ad_id,ad_name,campaign_id,spend,impressions,actions"):
-            anuncios.append([l["date_start"], l["ad_id"]] + metricas_meta(l))
+    if incremental:
+        corte = desde.isoformat()
+        campanhas = [l for l in anterior["campanhas_diario"]["linhas"] if l[0] < corte] + campanhas
+        anuncios = [l for l in anterior["anuncios_diario"]["linhas"] if l[0] < corte] + anuncios
 
     # nome, campanha e imagem (600px) de cada anúncio que aparece no histórico
     ids = {a[1] for a in anuncios}
@@ -229,6 +256,9 @@ def coletar_meta(token, hist, pres):
         "alcance_obs": "pessoas únicas, soma das contas" if len(ativos) > 1 else "pessoas únicas",
         "pixel_dias_invalidos": list(META_PIXEL_DIAS_INVALIDOS),
         "pixel_aviso": "O evento Lead do pixel disparava em cliques de WhatsApp/CTA (erro corrigido em 04/11/2026).",
+        "completo_em": anterior["completo_em"] if incremental else hoje.isoformat(),
+        "historico_inicio": hist[0].isoformat(),
+        "busca": f"incremental (últimos {META_DIAS_RECENTES} dias)" if incremental else "completa",
     }
 
 
@@ -545,7 +575,8 @@ def main():
         reaproveitados.add("meta")
         print(f"→ Meta Ads: reaproveitado (coletado há menos de {META_INTERVALO_MIN} min)", file=sys.stderr)
     else:
-        saida["meta"] = (rodar("Meta Ads", coletar_meta, env["META_ACCESS_TOKEN"], hist, pres)
+        meta_ant = anterior.get("meta") if anterior.get("versao") == 2 else None
+        saida["meta"] = (rodar("Meta Ads", coletar_meta, env["META_ACCESS_TOKEN"], hist, pres, meta_ant)
                          if env.get("META_ACCESS_TOKEN") else bloco_pendente("Falta META_ACCESS_TOKEN"))
     saida["hubspot"] = (rodar("HubSpot", coletar_hubspot, env["HUBSPOT_TOKEN"], hist)
                         if env.get("HUBSPOT_TOKEN") else bloco_pendente("Falta HUBSPOT_TOKEN"))

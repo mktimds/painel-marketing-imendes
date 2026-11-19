@@ -7,8 +7,8 @@ O painel tem três partes:
 3. **GitHub Actions** (`.github/workflows/atualizar-painel.yml`): roda o script a cada 10 min e envia o `dados.json` para a mesma pasta do site.
 
 A página relê o `dados.json` a cada 10 min sozinha, com contador regressivo e animação.
-Os dados vêm **por dia** (últimos 180 dias, mude com `DIAS_HISTORICO`), e o botão **Período** soma qualquer intervalo de datas no navegador.
-O **alcance** do Meta (pessoas únicas) não pode ser somado por dia: ele aparece só nos períodos prontos (mês atual, mês anterior, 7, 30 e 90 dias, tudo).
+Os dados vêm **por dia** (últimos 2 anos, mude com `DIAS_HISTORICO`), e o botão **Período** soma qualquer intervalo de datas no navegador.
+O **alcance** do Meta (pessoas únicas) não pode ser somado por dia: ele aparece só nos períodos prontos (mês atual, mês anterior, 7, 30 e 90 dias, 12 meses, este ano, ano passado, tudo).
 Cada aba tem um funil: plataforma (impressões, alcance, cliques, leads) → contatos no HubSpot daquela origem → negócios no pré-vendas → oportunidades qualificadas (SQL).
 A atribuição ao HubSpot usa só a origem original registrada (`hs_analytics_source`); leads cadastrados à mão, como os do WhatsApp, aparecem na aba WhatsApp pelo *Canal de entrada*.
 Nenhum token fica no HTML: os tokens ficam só nos *Secrets* do GitHub.
