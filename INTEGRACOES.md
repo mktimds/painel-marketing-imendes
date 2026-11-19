@@ -127,3 +127,12 @@ python3 -m http.server 8765   # e abra http://127.0.0.1:8765
 ```
 
 O `index.html` não abre com duplo clique (o navegador bloqueia a leitura do `dados.json` em `file://`); use um servidor como acima.
+
+## Atualização a cada 10 minutos (Cron do cPanel)
+
+O agendamento do próprio GitHub (`*/10`) atrasa muito em repositório público (na prática roda a cada 3–8 h). Por isso o **Cron do cPanel** dispara o workflow a cada 10 min (desde 19/11/2026):
+
+- Comando no cPanel → Trabalhos Cron: `*/10 * * * *` com `curl … /repos/mktimds/painel-marketing-imendes/actions/workflows/atualizar-painel.yml/dispatches`, lendo o token de `/home/grupoimendescom/.painel-gh-token` (permissão 600, fora do site).
+- O resultado da última tentativa fica em `/home/grupoimendescom/painel-cron.log`: `204` = ok; `401` = arquivo do token vazio ou token inválido; `403` = token sem permissão.
+- Token: *fine-grained* "painel-marketing-imendes" da conta mktimds, só com o repositório `painel-marketing-imendes` e **Actions: Read and write** (sem validade). Se for trocado, cole o novo no arquivo acima.
+- O **Meta** é coletado no máximo a cada 60 min (`META_INTERVALO_MIN`); nas outras execuções o bloco anterior é reaproveitado, porque o Meta bloqueia o app quando recebe chamadas demais.
