@@ -528,10 +528,12 @@ def limpar_segredos():
 META_INTERVALO_MIN = int(os.environ.get("META_INTERVALO_MIN", "60"))
 
 
-def reaproveitar(anterior, canal, agora, minutos):
+def reaproveitar(anterior, canal, agora, minutos, inicio=None):
     """Bloco anterior do canal, se for bom, de hoje e mais novo que `minutos`; senão None."""
     b = anterior.get(canal) if anterior.get("versao") == 2 else None
     if not b or b.get("status") != "ok" or b.get("desatualizado") or not b.get("coletado_em"):
+        return None
+    if inicio and b.get("historico_inicio") != inicio:   # histórico mudou de tamanho: coleta de novo
         return None
     try:
         quando = dt.datetime.fromisoformat(b["coletado_em"])
@@ -568,7 +570,7 @@ def main():
     }
     env = os.environ
     reaproveitados = set()
-    meta_velho = reaproveitar(anterior, "meta", agora, META_INTERVALO_MIN)
+    meta_velho = reaproveitar(anterior, "meta", agora, META_INTERVALO_MIN, hist[0].isoformat())
     if meta_velho:
         # O Meta limita chamadas por hora: entre uma coleta e outra, repete o bloco anterior.
         saida["meta"] = meta_velho
